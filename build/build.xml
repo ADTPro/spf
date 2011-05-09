@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+-->
+
+<project name="SPF" default="all" basedir="..">
+	<property name="versionString" value="v.r.m" />
+	<property name="distName" value="SPF-${versionString}" />
+	<property name="diskName" value="SPF-${versionString}" />
+	<property name="volName" value="SPF.${versionString}" />
+	<property name="projdir" value="${basedir}" />
+	<property name="builddir" value="${basedir}/build" />
+	<property file="${builddir}/SPFBuild.properties"/>
+	<property file="${builddir}/SPFBuild-default.properties"/>
+	<property name="acJar" value="${builddir}/lib/AppleCommander-1.3.5.6-ac.jar" />
+	<property name="jarBundlerJar" value="${builddir}/lib/jarbundler-2.1.0/jarbundler-2.1.0.jar" />
+	<property name="rxtxVersion" value="rxtx-2.2pre2-local" />
+	<property name="rxtxZip" value="${rxtxVersion}.zip" />
+	<property name="rxtxVersion2" value="rxtx-2.1-7-bins-r2" />
+	<property name="rxtxZip2" value="${rxtxVersion2}.zip" />
+	<property name="dmgmegabytes" value="6" />
+	<echo message="${distName} building on ${os.name}."/>
+
+	<target name="skipSOS" description="Order this before 'dev' or 'all' to skip building SOS parts.">
+		<property name="skipSOS" value="true"/>		
+	</target>
+
+	<target name="skipProDOS" description="Order this before 'dev' or 'all' to skip building ProDOS parts.">
+		<property name="skipProDOS" value="true"/>		
+	</target>
+
+	<target name="all" depends="wipe, clean, setup, assemble, builddsk" description="Bulid everything after wiping the output directory.">
+	</target>
+
+	<target name="dev" depends="clean, setup, assemble, builddsk" description="Build everything but the Java GUI; don't wipe the output directory.">
+	</target>
+
+	<target name="setup">
+		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<condition property="SOS-needed">
+			<not>
+				<isset property="skipSOS" />
+			</not>
+		</condition>
+		<condition property="ProDOS-needed">
+			<not>
+				<isset property="skipProDOS" />
+			</not>
+		</condition>
+	</target>
+
+	<target name="wipe">
+		<!--
+		Clean up everything
+		-->
+		<delete dir="${builddir}/${distName}" />
+	</target>
+
+	<target name="clean">
+		<!--
+		Clean up everything
+		-->
+		<delete file="${builddir}/SPF" />
+		<delete file="${builddir}/SPF.SYSTEM" />
+		<delete file="${builddir}/SPFSOS" />
+		<delete file="${projdir}/client/src/messages.asm" />
+		<delete file="${builddir}/${distName}.tar.gz" />
+		<delete file="${builddir}/${distName}.zip" />
+		<delete file="${builddir}/${distName}.dmg" />
+		<delete file="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<delete>
+			<fileset dir="${projdir}/client/src" includes="**/*.o"/>
+			<fileset dir="${projdir}/client/src" includes="**/*.map"/>
+			<fileset dir="${projdir}/client/src" includes="**/*.lst"/>
+			<fileset dir="${projdir}/client/src" includes="**/*.lib"/>
+		</delete>
+	</target>
+
+	<target name="assemble">
+		<mkdir dir="${builddir}/${distName}"/>
+		<copy file="${projdir}/client/src/messagesOrig.asm" tofile="${projdir}/client/src/messages.asm" overwrite="true" />
+		<replace file="${projdir}/client/src/messages.asm" token="%SPF_VERSION%" value="${versionString}"/>
+		<antcall target="assembleProDOS"/>
+		<antcall target="assembleSOS"/>
+	</target>
+
+	<target name="assembleProDOS" depends="assembleCommon" if="ProDOS-needed">
+		<!--
+		Assemble the SPF source
+		-->
+		<echo message="Assembling SPF source..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -l prodos/prodosmain.lst prodos/prodosmain.asm" />
+		</exec>
+		<echo message="Assembling SPF Launcher source..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -l prodos/launch.lst prodos/launch.asm" />
+		</exec>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -l prodos/startup.lst prodos/startup.asm" />
+		</exec>
+		<!--
+		Link the bits
+		-->
+		<echo message="Linking Startup/Launcher..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+			<arg line="-o STARTUP.SYSTEM -C prodos/launch.cfg prodos/startup.o" />
+		</exec>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+			<arg line="-o SPF -C prodos/launch.cfg prodos/launch.o" />
+		</exec>
+		<echo message="Linking SPF..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+			<arg line="-o SPF.BIN -m SPFprodos.map -C prodos/SPF.cfg prodos/prodosmain.o tail.o" />
+		</exec>
+		<!--
+		Move the object code to the build directory
+		-->
+		<move file="${projdir}/client/src/STARTUP.SYSTEM" tofile="${builddir}/STARTUP.SYSTEM" />
+		<move file="${projdir}/client/src/SPF" tofile="${builddir}/SPF" />
+		<move file="${projdir}/client/src/SPF.BIN" tofile="${builddir}/SPF.BIN" />
+	</target>
+
+	<target name="assembleSOS" depends="assembleCommon" if="SOS-needed">
+		<!--
+		Assemble the SPFSOS source
+		-->
+		<echo message="Assembling SPFSOS source..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -l sos/sosmain.lst sos/sosmain.asm" />
+		</exec>
+		<!--
+		Link the bits
+		-->
+		<echo message="Linking SPFSOS..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+			<arg line="-o SPFSOS -m SPFSOS.map -C sos/SPF.cfg sos/sosmain.o tail.o" />
+		</exec>
+		<!--
+		Move the object code to the build directory
+		-->
+		<move file="${projdir}/client/src/SPFSOS" tofile="${builddir}/SPFSOS" />
+	</target>
+
+	<target name="assembleCommon">
+		<!--
+		Assemble the end of source marker
+		-->
+		<echo message="Assembling end-of-source marker..."/>
+		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none tail.asm" />
+		</exec>
+	</target>
+
+	<target name="builddsk" depends="buildProDOSdsk, buildSOSdsk">
+	</target>
+
+	<target name="buildProDOSdsk" if="ProDOS-needed">
+		<!--
+		Start disk images containing the release number
+		-->
+		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<!--
+		Put the assembled programs on the disk images
+		-->
+
+		<echo message="Adding startup files to 5.25 disk image..."/>
+		<java jar="${acJar}" fork="true" dir="${builddir}" input="${builddir}/STARTUP.SYSTEM">
+			<jvmarg line="-Dconsole.encoding=ISO-8859-15" />
+			<arg line="-p ${distName}/disks/${diskName}.DSK STARTUP.SYSTEM sys 8192" />
+		</java>
+		<java jar="${acJar}" fork="true" dir="${builddir}" input="${builddir}/SPF">
+			<jvmarg line="-Dconsole.encoding=ISO-8859-15" />
+			<arg line="-p ${distName}/disks/${diskName}.DSK SPF sys 8192" />
+		</java>
+
+		<echo message="Adding SPF to 5.25 disk image..."/>
+		<java jar="${acJar}" fork="true" dir="${builddir}" input="${builddir}/SPF.BIN">
+			<jvmarg line="-Dconsole.encoding=ISO-8859-15" />
+			<arg line="-p ${distName}/disks/${diskName}.DSK SPF.BIN bin 2048" />
+		</java>
+		<delete file="${builddir}/SPF" />
+		<delete file="${builddir}/SPF.SYSTEM" />
+		<delete file="${builddir}/STARTUP.SYSTEM" />
+		<delete file="${builddir}/SPF.BIN" />
+	</target>
+
+	<target name="buildSOSdsk" if="SOS-needed">
+		<!--
+		Put the assembled programs on the disk images
+		-->
+		<echo message="Adding SPFSOS to 5.25 disk image..."/>
+		<java jar="${acJar}" fork="true" dir="${builddir}" input="${builddir}/SPFSOS">
+			<jvmarg line="-Dconsole.encoding=ISO-8859-15" />
+			<arg line="-p ${distName}/disks/${diskName}.DSK SOS.INTERP sos 0000" />
+		</java>
+		<!--
+		Put a nice volume name on the disk images
+		-->
+		<java jar="${acJar}" fork="true" dir="${builddir}">
+			<arg line="-n ${distName}/disks/${diskName}.DSK ${volName}" />
+		</java>
+		<delete file="${builddir}/SPFSOS" />
+	</target>
+</project>

@@ -1,0 +1,11 @@
+*.po
+*.hdv
+SPF-*.zip
+SPF-*.jar
+SPF-*.tar
+SPF-*.gz
+SPF
+SPF.properties
+SPFBuild.properties
+SPF.command
+SPF-?.?.?

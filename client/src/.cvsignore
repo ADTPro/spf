@@ -1,0 +1,6 @@
+*.map
+*.lst
+MANUALBOOTSTRAP
+LOADER
+GRUB
+messages.asm
