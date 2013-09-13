@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 by David Schmidt
+; Copyright (C) 2011 - 2013 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -36,6 +36,8 @@
 	.include "input.asm"
 	.include "prodos/format.asm"		; Note: includes FORMAT segment
 	.include "lowlevel.asm"
+	.include "timetest.asm"
+	.include "prodos/gettime.asm"
 
 	.segment "DATA"
 	

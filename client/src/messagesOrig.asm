@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 by David Schmidt
+; Copyright (C) 2011 - 2013 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -73,7 +73,7 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 	MSG01:	asc "%SPF_VERSION%"
 	MSG01_END =*
 
-	MSG02:	asc "(L)OW-LEVEL VOLUME CERTIFY"
+	MSG02:	asc "(L)OW-LEVEL VOLUME CERTIFY (T)IME TEST"
 		.byte CHR_RETURN,CHR_RETURN
 	MSG02_END =*
 
@@ -173,6 +173,17 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 	MSG35:	asc "IMAGE/DRIVE SIZE MISMATCH!"
 		.byte CHR_RETURN
 	MSG35_END =*
+
+	MHFS:
+		asc "<HFS>"
+	MHFS_END =*
+
+	MSG05a:	asc " CHOOSE VOLUME FOR TIME TEST"
+	MSG05a_END =*
+
+	MSGNoClock:
+		asc "NO CLOCK FOUND."
+	MSGNoClock_END =*
 
 	MLOGO1:	.byte NRM_BLOCK,INV_BLOCK,INV_BLOCK,INV_BLOCK,NRM_BLOCK,INV_BLOCK,INV_BLOCK,INV_BLOCK,NRM_BLOCK,NRM_BLOCK,INV_BLOCK,INV_BLOCK,INV_BLOCK,INV_BLOCK,CHR_RETURN
 	MLOGO1_END =*
@@ -287,7 +298,7 @@ MSGTBL:
 	.addr MUTHBAD, MPREFIX, MINSERTDISK, MFORMAT, MANALYSIS, MNOCREATE
 	.addr MVolName, MTheOld, MUnRecog, MDead
 	.addr MProtect, MNoDisk, MNuther, MUnitNone, MNIBTOP
-	.addr MNULL
+	.addr MHFS, MSG05a, MSGNoClock, MNULL
 
 ;---------------------------------------------------------
 ; Message length table
@@ -355,6 +366,9 @@ MSGLENTBL:
 	.byte MNuther_END-MNuther
 	.byte MUnitNone_END-MUnitNone
 	.byte MNIBTOP_END-MNIBTOP
+	.byte MHFS_END-MHFS
+	.byte MSG05a_END-MSG05a
+	.byte MSGNoClock_END-MSGNoClock
 	.byte $00	; MNULL - null message has no length.
 
 ;---------------------------------------------------------
@@ -422,4 +436,7 @@ PMNoDisk	= $72
 PMNuther	= $74
 PMUnitNone	= $76
 PMNIBTOP	= $78
-PMNULL		= $7a
+PMHFS		= $7a
+PMSG05a		= $7c
+PMSGNoClock	= $7e
+PMNULL		= $80

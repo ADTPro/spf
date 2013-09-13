@@ -84,8 +84,9 @@ OLLOOP:
 @SK2:	lda DEVICES+1,x
 	cmp #$52	; Not Pro-DOS
 	bne @1
-	jsr DEVMSG1
-	jmp skip
+; Could be an HFS volume... check that out.
+	jmp HFSNAME
+
 @1:	cmp #$27	; I/O Error
 	bne @2
 	jsr DEVMSG2
@@ -119,6 +120,44 @@ OERROR:
 	STA PARMBUF+1
 	RTS
 
+; HFSNAME - Check for HFS volume existence and name
+HFSNAME:
+; Load up block 2
+; Check bytes 0 and 1 for $42 and $44, respectively
+; Bytes 36 ($24): string length (Max may be 31, or $1f)
+; Bytes 37- ($25- ) are the ASCII volume name
+	sty SLOWY
+	lda #$03	; Set up MLI call - 3 parameters
+	sta PARMBUF
+	lda DEVICES,x
+	STA PARMBUF+1
+	LDA_BIGBUF_ADDR_LO	; Point to the start of the big buffer
+	sta PARMBUF+2
+	LDA_BIGBUF_ADDR_HI
+	sta PARMBUF+3
+	lda #$02
+	sta PARMBUF+4
+	lda #$00
+	sta PARMBUF+5
+	CALLOS OS_READBLOCK, PARMBUF
+	bne @HFSBAD
+	lda BIGBUF
+	cmp #$42
+	bne @HFSBAD
+	lda BIGBUF+1
+	cmp #$44
+	bne @HFSBAD
+	lda #$25
+	sta UTILPTR
+	LDA_BIGBUF_ADDR_HI
+	sta UTILPTR+1
+	ldy BIGBUF+$24
+	jsr DMENTRY2
+	jmp skip
+@HFSBAD:
+	jsr DEVMSG1
+@HFSOK:	jmp skip
+
 ; DEVMSG - Add a hardcoded message to the "Volume name" area of the device
 DEVMSG:
 	stx XSTASH	; Preserve X - the index into DEVICES structure
@@ -134,6 +173,7 @@ DEVMSG:
 	sta SLOWY	; Store the message length
 	tay		; Y now holds the message length
 	dey
+DMENTRY2:
 	lda XSTASH	; Grab the index into the DEVICES structure
 	sec
 	adc #<DEVICES
@@ -578,8 +618,8 @@ HOWBIG2:
 	clc
 	adc #$01	; Add one for the leading "/"
 	sta VOLNAME	; Store total name length
-	txa			; Preserve X
-	pha			; by pushing it onto the stack
+	txa		; Preserve X
+	pha		; by pushing it onto the stack
 	lda #'/'
 	sta VOLNAME+1
 	lda DEVICES,x	; Get ready to do an ONLINE query

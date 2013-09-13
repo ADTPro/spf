@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 by David Schmidt
+; Copyright (C) 2011 - 2013 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -58,6 +58,12 @@ KLOWLEVEL:
 	jsr LowLevel
 	jmp MAINLUP
 :
+KTIMING:
+	cmp #CHR_T	; Time Test?
+	bne :+		; Nope
+	jsr TimeTest
+	jmp MAINLUP
+:
 KABOUT:	cmp #$9F	; ABOUT MESSAGE? ("?" KEY)
 	bne :+		; Nope
 	lda #$03
@@ -99,7 +105,7 @@ FORWARD:
 ;---------------------------------------------------------
 MainScreen:
 	jsr SHOWLOGO
-	ldx #$07
+	ldx #$01
 	ldy #$0e
 	jsr GOTOXY
 	ldy #PMSG02	; Prompt line 1
