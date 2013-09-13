@@ -19,6 +19,14 @@
 ;
 
 InitTime:
+	CALLOS OS_GET_TIME, 0
+	rts
+	ldx #$00
+:	lda $0200,x
+	sta $7000,x
+	inx
+	cpx #$8
+	bne :-
 	sec
 	jsr $FE1F	; CheckForGS
 	bcc FoundClockGS
@@ -48,6 +56,16 @@ FoundClockNoSlot:
 	rts
 
 GetTime:
+	CALLOS OS_GET_TIME, 0
+	lda $0204	; Hours
+	sta TimeNow
+	lda $0205	; Minutes
+	sta TimeNow+1
+	lda $0206	; Seconds
+	sta TimeNow+2
+	lda $0207	; Hundredths
+	sta TimeNow+3
+	rts
 	jsr $0000
 	rts
 
