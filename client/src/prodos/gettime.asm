@@ -19,14 +19,6 @@
 ;
 
 InitTime:
-	CALLOS OS_GET_TIME, 0
-	rts
-	ldx #$00
-:	lda $0200,x
-	sta $7000,x
-	inx
-	cpx #$8
-	bne :-
 	sec
 	jsr $FE1F	; CheckForGS
 	bcc FoundClockGS
@@ -37,7 +29,7 @@ InitTime:
 
 FoundClockGS:
 ;---------------------------------------------------------
-; Patch the entry point of GetTIme to the IIgs version
+; Patch the entry point of GetTime to the IIgs version
 ;---------------------------------------------------------
 	lda #<GetTimeGS
 	sta GetTime+1
@@ -361,8 +353,6 @@ CheckForSlottedClocks:
 ; Look for clocks via signature in firmware
 ;---------------------------------------------------------
 	sec
-; Finding a Thunderclock: first 3 bytes of firmware are $10, $F0, $50.
-; Need to iterate through slots and see.
 FindClockSlot:
 	lda #$00
 	tay
@@ -391,6 +381,7 @@ FindClockSlotLoop:
 	jsr PrepThunderclock
 	jmp FindClockSlotDone
 NotThunder:
+	; Check for other slotted clocks
 FindClockSlotNext:
 	dex
 	bne FindClockSlotLoop
@@ -426,8 +417,8 @@ L7011:	jsr L7033
 	sta L7069,x
 	dex
 	bne L7011
-	clc
-	lda TKH1
+	clc		; Convert from BCD and copy out time
+	lda TKH1	; Multiply 10s of hours by 10, add to units
 	ldx #$0a
 :	adc TKH2
 	dex
@@ -435,7 +426,7 @@ L7011:	jsr L7033
 	lda TKH2	; Hours
 	sta TimeNow
 	clc
-	lda TKM1
+	lda TKM1	; Multiply 10s of minutes by 10, add to units
 	ldx #$0a
 :	adc TKM2
 	dex
@@ -443,7 +434,7 @@ L7011:	jsr L7033
 	lda TKM2	; Minutes
 	sta TimeNow+1	
 	clc
-	lda TKS1
+	lda TKS1	; Multiply 10s of seconds by 10, add to units
 	ldx #$0a
 :	adc TKS2
 	dex
