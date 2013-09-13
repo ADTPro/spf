@@ -35,7 +35,7 @@
 	.include "pickvol.asm"
 	.include "input.asm"
 	.include "sos/format.asm"			; Note: includes FORMAT segment
-	.include "lowlevel.asm"
+	.include "sos/lowlevel.asm"
 	.include "timetest.asm"
 	.include "sos/gettime.asm"
 

@@ -35,7 +35,7 @@
 	.include "pickvol.asm"
 	.include "input.asm"
 	.include "prodos/format.asm"		; Note: includes FORMAT segment
-	.include "lowlevel.asm"
+	.include "prodos/lowlevel.asm"
 	.include "timetest.asm"
 	.include "prodos/gettime.asm"
 
