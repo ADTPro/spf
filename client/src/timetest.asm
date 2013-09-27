@@ -62,13 +62,17 @@ TimeTest:
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
-	jsr PrintTimeDifference
-	jsr FileDelete
-	jmp TT1M
+	plp
+	bcc TT1M
+			; Done; jump to reading code
+	jmp TimeTestPromptDone
 
 ; 1M
 TT1M:
+			; Print prior results
+	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -90,12 +94,17 @@ TT1M:
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
-	jsr PrintTimeDifference
-	jsr FileDelete
+	plp
+	bcc TT2M
+			; Done; jump to reading code
+	jmp TimeTestPromptDone
 
 ; 2M
 TT2M:
+			; Print prior results
+	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -117,12 +126,17 @@ TT2M:
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
-	jsr PrintTimeDifference
-	jsr FileDelete
+	plp
+	bcc TT4M
+			; Done; jump to reading code
+	jmp TimeTestPromptDone
 
 ; 4M
 TT4M:
+			; Print prior results
+	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -144,11 +158,17 @@ TT4M:
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
-	jsr PrintTimeDifference
-	jsr FileDelete
+	plp
+	bcc TT8M
+			; Done; jump to reading code
+	jmp TimeTestPromptDone
 
 ; 8M
+TT8M:
+			; Print prior results
+	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -170,11 +190,17 @@ TT4M:
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
-	jsr PrintTimeDifference
-	jsr FileDelete
+	plp
+	bcc TT16M
+			; Done; jump to reading code
+	jmp TimeTestPromptDone
 
 ; 16M
+TT16M:
+			; Print prior results
+	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -189,16 +215,19 @@ TT4M:
 	jsr FileOpen
 	bcc :+
 	jmp TimeTestDone1
-:	lda #0
+:	lda #$00
 	sta FileSizeInChunks
 	lda #$04	; 1024
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime
 	jsr FileWrite
+	php
 	jsr GetTime	; End timer
+	plp
+	bcs TimeTestPromptDone
+			; Only report on successful test
 	jsr PrintTimeDifference
-	jsr FileDelete
 
 
 ; All done - print a final message

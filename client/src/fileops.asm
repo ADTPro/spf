@@ -37,7 +37,7 @@ FileOpenFail:			; Nearby branch point
 	rts
 
 FileOpen:
-				; Delete file if it exists - ignore RC
+				; Get rid of the prior version of the file, if it was there
 	CALLOS OS_DESTROY, FILE_RM
 				; Create the new version of the file
 	CALLOS OS_CREATE, FILE_CR
@@ -71,7 +71,7 @@ FileWritePrep:
 FileWrite:
 	CALLOS OS_WRITEFILE, FILE_WR	; Write 16k
 	CALLOS_CHECK_POS	; Branch forward on success
-	jmp FileOpenFail
+	jmp FileWriteFail
 :	lda $C000
 	cmp #CHR_ESC		; Escape = abort
 	beq FileWriteQuit
@@ -88,9 +88,21 @@ FileWrite:
 	beq FileWriteQuit
 	dec FileSizeInChunks+1
 	bne FileWrite
+
 FileWriteQuit:
+	lda #$a0
+	sta $400
+	sta $400	; Clear out spinner
 	CALLOS OS_CLOSE, FILE_CL
 	clc
+	rts
+
+FileWriteFail:		; If we fail to write a full file, close and delete it
+	lda #$a0
+	sta $400	; Clear out spinner
+	CALLOS OS_CLOSE, FILE_CL
+	CALLOS OS_DESTROY, FILE_RM
+	sec
 	rts
 
 FileDelete:
