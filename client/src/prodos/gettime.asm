@@ -48,16 +48,6 @@ FoundClockNoSlot:
 	rts
 
 GetTime:
-	CALLOS OS_GET_TIME, 0
-	lda $0204	; Hours
-	sta TimeNow
-	lda $0205	; Minutes
-	sta TimeNow+1
-	lda $0206	; Seconds
-	sta TimeNow+2
-	lda $0207	; Hundredths
-	sta TimeNow+3
-	rts
 	jsr $0000
 	rts
 

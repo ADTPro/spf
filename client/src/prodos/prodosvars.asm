@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 by David Schmidt
+; Copyright (C) 2011 - 2013 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -51,6 +51,9 @@ output_buffer = BIGBUF	; For ip65 buffer space
 CRCTBLL	= $BC00		; CRC LOW TABLE  ($100 Bytes)
 CRCTBLH	= $BD00		; CRC HIGH TABLE ($100 Bytes)
 
+TEST_FILE_NAME:
+	.res 34, 0
+
 ;---------------------------------------------------------
 ; Variables from BLOAD/BSAVE code
 ;---------------------------------------------------------
@@ -80,35 +83,40 @@ GET_PFX_PLIST:
 ; Table for open
 
 FILE_OP:	.byte 3
-FILE_NAME:	.addr PARMS	; addr len+name
+FILE_NAME:	.addr TEST_FILE_NAME	; addr len+name
 FILE_BUF_PTR:	.addr BIGBUF+1024	; 1024 bytes buffer
-FILE_OPN:	.byte 0		; opened file number
+FILE_OPN:	.byte 0			; opened file number
 
 ; Table for create
 
 FILE_CR:	.byte $07
-		.addr PARMS	; addr len+name
+		.addr TEST_FILE_NAME	; addr len+name
 		.byte $C3		; Full access
 		.byte $06		; BIN file
 		.addr $FFFF		; Aux data - load addr
-		.byte $01			; Standard seedling file
+		.byte $01		; Standard seedling file
 		.byte $00, $00		; Creation date
 		.byte $00, $00		; Creation time
+
+; Table for destroy
+
+FILE_RM:	.byte $01
+		.addr TEST_FILE_NAME	; addr len+name
 
 ; Table for read
 
 FILE_RD:	.byte 4
 FILE_RDN:	.byte 0			; opened file number
-FILE_RADR:	.addr PARMS		; loading addr
-FILE_RLEN:	.addr PARMS	; max len
+FILE_RADR:	.addr BIGBUF		; read addr
+FILE_RLEN:	.addr $4000		; max len - 16k
 FILE_RALEN:	.addr $FFFF		; real len of loaded file
 
 ; Table for write
 
 FILE_WR:	.byte 4
 FILE_WRN:	.byte 0			; opened file number
-FILE_WADR:	.addr PARMS		; loading addr
-FILE_WLEN:	.addr PARMS	; max len
+FILE_WADR:	.addr BIGBUF		; write addr
+FILE_WLEN:	.addr $4000		; max len - 16k
 FILE_WALEN:	.byte 0,0		; real len of loaded file
 
 ; Table for close

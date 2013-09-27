@@ -686,6 +686,40 @@ HOWBIG2:
 	rts
 
 ;---------------------------------------------------------
+; GETVOLNAME - Fill in TEST_FILE_NAME with (you guessed it) the Volume Name
+;
+; Input: 
+;   A holds index into device list
+; 
+; Returns:
+;   TEST_FILE_NAME set with leading length and '/' character 
+;   VOLNAMELEN set with length of volume name
+;---------------------------------------------------------
+GETVOLNAME:
+	asl		; * 0x02
+	asl		; * 0x04
+	asl		; * 0x08
+	asl		; * 0x10
+	tax		; X now holds offset into DEVICES structure
+	lda DEVICES,X
+	and #$0F	; Extract volume name length
+	clc
+	adc #$01	; Add one byte to the length for the leading "/"
+	sta TEST_FILE_NAME	; Store total name length
+	sta VOLNAMELEN
+	lda #'/'
+	sta TEST_FILE_NAME+1
+	ldy #$01
+@GVNLOOP:
+	inx
+	iny
+	lda DEVICES,x
+	sta TEST_FILE_NAME,y
+	cpy TEST_FILE_NAME
+	bne @GVNLOOP
+	rts
+
+;---------------------------------------------------------
 ; DRAWBDR
 ; 
 ; Draws the volume picker decorative border
@@ -821,6 +855,7 @@ PRTSVA:	.byte $00
 VOLNAME:	.res 17,$00		; One byte for length
 					; One byte for leading slash
 					; 15 bytes for name
+VOLNAMELEN:	.byte $00		; Length of volume name
 
 LASTVOL:	.byte $00		; The number of volumes currently in the table
 onlineUnit:	.byte $00

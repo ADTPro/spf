@@ -38,6 +38,7 @@
 	.include "prodos/lowlevel.asm"
 	.include "timetest.asm"
 	.include "prodos/gettime.asm"
+	.include "fileops.asm"
 
 	.segment "DATA"
 	

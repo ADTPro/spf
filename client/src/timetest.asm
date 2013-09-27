@@ -19,6 +19,7 @@
 ;
 
 TimeTestDone1:
+	clc
 	rts
 
 TimeTestFail:
@@ -35,7 +36,170 @@ TimeTest:
 	ldy #PMSG05a	; Time title line
 	jsr PICKVOL	; A now has index into DEVICES table; UNITNBR holds chosen unit
 	bmi TimeTestDone1
-	jsr GetTime
+	jsr GETVOLNAME	; TEST_FILE_NAME now holds the volume prefix and VOLNAMELEN is set
+	ldx #$00
+	ldy #$0b
+	jsr GOTOXY
+; 512K
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_512K,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #32
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+	jmp TT1M
+
+; 1M
+TT1M:
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_1M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #64
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+
+; 2M
+TT2M:
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_2M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #128
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+
+; 4M
+TT4M:
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_4M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #0
+	sta FileSizeInChunks
+	lda #$01	; 256
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+
+; 8M
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_8M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #0
+	sta FileSizeInChunks
+	lda #$02	; 512
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+
+; 16M
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_16M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #$09
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpen
+	bcc :+
+	jmp TimeTestDone1
+:	lda #0
+	sta FileSizeInChunks
+	lda #$04	; 1024
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	jsr GetTime	; End timer
+	jsr PrintTimeDifference
+	jsr FileDelete
+
 
 ; All done - print a final message
 TimeTestPromptDone:
@@ -47,8 +211,55 @@ TimeTestPromptDone:
 	jsr RDKEY
 	rts
 
+;
+; MoveTime - moves the time from the clock loading area to another holding place.
+;
+MoveTime:
+	ldx #$03
+:	lda TimeNow,X
+	sta Time2,X
+	dex
+	bpl :-
+	rts
+
+;
+; 
+;
+PrintTimeDifference:
+	jsr CROUT
+			; Calculate seconds
+	sec
+	lda TimeNow+2
+	sbc Time2+2
+	bcs :+
+	adc #60
+	dec TimeNow+1 
+:	sta Elapsed+2
+			; Calculate minutes
+	sec
+	lda TimeNow+1
+	sbc Time2+1
+	bcs :+
+	adc #60
+	dec TimeNow
+:	sta Elapsed+1
+			; Calculate hours
+	sec
+	lda TimeNow
+	sbc Time2
+	bcs :+
+	adc #24
+:	sta Elapsed
+			; Print them back out, in reverse order
+	jsr ToDecimal
+	lda Elapsed+1
+	jsr ToDecimal
+	lda Elapsed+2
+	jsr ToDecimal
+	rts
+
 TimeNow:
-	.res 4		; Filled in by gettime.asm: Hours, Minutes, Seconds, Hundredths	
-Time2:	.res 4
+	.res 4,0	; Filled in by gettime.asm: Hours, Minutes, Seconds, Hundredths	
+Time2:	.res 4,0
 Elapsed:
 	.res 4
