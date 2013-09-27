@@ -40,6 +40,7 @@ TimeTest:
 	ldx #$00
 	ldy #$0b
 	jsr GOTOXY
+
 ; 512K
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
@@ -48,7 +49,7 @@ TimeTest:
 	sta TEST_FILE_NAME,X
 	inx
 	iny
-	cpy #$09
+	cpy #Filename_Len
 	bne :-
 	dex
 	stx TEST_FILE_NAME
@@ -80,7 +81,7 @@ TT1M:
 	sta TEST_FILE_NAME,X
 	inx
 	iny
-	cpy #$09
+	cpy #Filename_Len
 	bne :-
 	dex
 	stx TEST_FILE_NAME
@@ -112,7 +113,7 @@ TT2M:
 	sta TEST_FILE_NAME,X
 	inx
 	iny
-	cpy #$09
+	cpy #Filename_Len
 	bne :-
 	dex
 	stx TEST_FILE_NAME
@@ -144,7 +145,7 @@ TT4M:
 	sta TEST_FILE_NAME,X
 	inx
 	iny
-	cpy #$09
+	cpy #Filename_Len
 	bne :-
 	dex
 	stx TEST_FILE_NAME
@@ -176,7 +177,7 @@ TT8M:
 	sta TEST_FILE_NAME,X
 	inx
 	iny
-	cpy #$09
+	cpy #Filename_Len
 	bne :-
 	dex
 	stx TEST_FILE_NAME
@@ -186,38 +187,6 @@ TT8M:
 :	lda #0
 	sta FileSizeInChunks
 	lda #$02	; 512
-	sta FileSizeInChunks+1
-	jsr GetTime	; Start timer
-	jsr MoveTime
-	jsr FileWrite
-	php
-	jsr GetTime	; End timer
-	plp
-	bcc TT16M
-			; Done; jump to reading code
-	jmp TimeTestPromptDone
-
-; 16M
-TT16M:
-			; Print prior results
-	jsr PrintTimeDifference
-	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
-	inx
-	ldy #$00
-:	lda Filename_16M,Y
-	sta TEST_FILE_NAME,X
-	inx
-	iny
-	cpy #$09
-	bne :-
-	dex
-	stx TEST_FILE_NAME
-	jsr FileOpen
-	bcc :+
-	jmp TimeTestDone1
-:	lda #$00
-	sta FileSizeInChunks
-	lda #$04	; 1024
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime

@@ -69,54 +69,52 @@ FileWritePrep:
 	lda Spinner,X
 	sta $400
 FileWrite:
+	lda FileSizeInChunks
+	ora FileSizeInChunks+1	; Check for zero at top of loop
+	bne FileWrite1
+	jmp FileWriteQuit
+FileWrite1:
 	CALLOS OS_WRITEFILE, FILE_WR	; Write 16k
 	CALLOS_CHECK_POS	; Branch forward on success
 	jmp FileWriteFail
-:	lda $C000
+:	lda $C000		; Let the user interrupt
 	cmp #CHR_ESC		; Escape = abort
 	beq FileWriteQuit
-	
-	dex
-	bpl :+
+	dex			; Manage the spinner
+	bpl @SkipSpin
 	ldx #$03
-:	lda Spinner,X
+@SkipSpin:
+	lda Spinner,X
 	sta $400
-	
-	dec FileSizeInChunks
+	dec FileSizeInChunks	; Decrement the 16-bit counter
+	lda FileSizeInChunks
+	cmp #$ff
 	bne FileWrite
-	lda FileSizeInChunks+1
-	beq FileWriteQuit
 	dec FileSizeInChunks+1
-	bne FileWrite
+	jmp FileWrite
 
 FileWriteQuit:
 	lda #$a0
-	sta $400
 	sta $400	; Clear out spinner
 	CALLOS OS_CLOSE, FILE_CL
 	clc
 	rts
 
 FileWriteFail:		; If we fail to write a full file, close and delete it
-	lda #$a0
+	lda #$20	; Spinner should reflect failure
 	sta $400	; Clear out spinner
 	CALLOS OS_CLOSE, FILE_CL
 	CALLOS OS_DESTROY, FILE_RM
 	sec
 	rts
 
-FileDelete:
-	CALLOS OS_DESTROY, FILE_RM
-	clc
-	rts
-
 FileSizeInChunks:
 	.addr 0			; Number of 16k chunks to read/write  
 
+Filename_Len	= $09			; All filenames are assumed to be the same length
 Filename_512K:	.asciiz "/FILE512K"	; 32 hunks of 16k
 Filename_1M:	.asciiz "/FILE001M"	; 64 hunks of 16k
 Filename_2M:	.asciiz "/FILE002M"	; 128 hunks of 16k
 Filename_4M:	.asciiz "/FILE004M"	; 256 hunks of 16k
 Filename_8M:	.asciiz "/FILE008M"	; 512 hunks of 16k
-Filename_16M:	.asciiz "/FILE016M"	; 1024 hunks of 16k
 Spinner:	ascz "/|\-"
