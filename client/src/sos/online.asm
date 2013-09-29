@@ -216,6 +216,8 @@ INTERPRET_ONLINE:
 ; Input:
 ;   X - The item to point at (0-indexed)
 ;
+; Output:
+;   UTILPTR - points at the Xth item in the DEVICES structure
 ;---------------------------------------------------------
 POINT_AT:
 	lda #<DEVICES
@@ -246,6 +248,44 @@ POINT_NEXT:
 	bcc :+
 	inc UTILPTR+1
 :	rts
+
+;---------------------------------------------------------
+; GETVOLNAME - Fill in TEST_FILE_NAME with (you guessed it) the Volume Name
+;
+; Input: 
+;   A holds index into device list
+; 
+; Returns:
+;   TEST_FILE_NAME set with leading length and '/' character 
+;   VOLNAMELEN set with length of volume name
+;---------------------------------------------------------
+GETVOLNAME:
+	tax
+	jsr POINT_AT	; UTILPTR now holds offset into DEVICES structure
+	ldx #$03
+	ldy #$02
+@VNNext:
+	lda DEVICES,X
+	beq @VNDone
+	sta TEST_FILE_NAME,Y
+	inx
+	iny
+	jmp @VNNext
+@VNDone:
+	inx
+	stx TEST_FILE_NAME	; Store total name length
+	stx VOLNAMELEN
+	lda #'/'
+	sta TEST_FILE_NAME+1
+	ldy #$01
+@GVNLOOP:
+	inx
+	iny
+	lda DEVICES,x
+	sta TEST_FILE_NAME,y
+	cpy TEST_FILE_NAME
+	bne @GVNLOOP
+	rts
 
 ;---------------------------------------------------------
 ; DRAWBDR
@@ -395,12 +435,16 @@ DEVMODE:	.byte $00	; Device mode: $00 means block devices, $40 means format-capa
 
 ; DEVICES structure:
 ;
-; Device Number	.byte
-; Volume Blocks	.word
-; Device Name	.res $0f
-; Volume Name	.res $0f
-;               ======
-;               $21 bytes per entry; $18 possible entries
+; $00: Device Number	.byte
+; $01: Volume Blocks	.word
+; $03: Device Name	.res $0f
+; $12: Volume Name	.res $0f
+;                       ======
+;                       $21 bytes per entry; $18 possible entries
 ONE_DEVICE_COSTS	=$21
 DEVICES:	.res ONE_DEVICE_COSTS*$18, $ff
 DEVICES_END	=*
+VOLNAME:	.res 17,$00		; One byte for length
+					; One byte for leading slash
+					; 15 bytes for name
+VOLNAMELEN:	.byte $00		; Length of volume name

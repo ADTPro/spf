@@ -38,6 +38,7 @@
 	.include "sos/lowlevel.asm"
 	.include "timetest.asm"
 	.include "sos/gettime.asm"
+	.include "sos/fileops.asm"
 
 ; Stubs from Disk II-related stuff that SOS does not need
 ReceiveNib:

@@ -177,7 +177,6 @@
 		Put a nice volume name on the disk image
 		-->
 		<appleCommander command="n" imagename="${distName}/disks/${diskName}.DSK" volname="${volName}"/>
-		<delete file="${builddir}/SPFSOS" />
 		<delete file="${builddir}/SPF" />
 		<delete file="${builddir}/SPF.SYSTEM" />
 		<delete file="${builddir}/STARTUP.SYSTEM" />

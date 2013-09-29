@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 by David Schmidt
+; Copyright (C) 2011 - 2013 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -20,7 +20,7 @@
 
 .export output_buffer
 
-.global CAPBLKS, PARMBUF, BLKLO, BLKHI, BIGBUF, CRCTBLL, CRCTBLH
+.global CAPBLKS, PARMBUF, BLKLO, BLKHI, CRCTBLL, CRCTBLH
 .global NUMBLKS, HOSTBLX, UNITNBR
 .global COMMSLOT, PSPEED, PSOUND, PSAVE, PGSSLOT, SR_WR_C, SLOWA, SLOWX, SLOWY
 .global PCCRC, COLDSTART, BAUD, NonDiskII, SendType
@@ -50,12 +50,18 @@ CRCY	= $30		; ($01 byte) Used by UDP SEND
 TMOT    = $31		; ($01 byte) Timeout indicator
 NIBPCNT	= $32		; ($01 byte) Counts nibble pages
 UTILPTR2	= $33		; ($02 bytes) Used for printing messages too
+
+;------------------------------------
+; Variables - memory written to
+;------------------------------------
+
 CRCTBLL:	.res $100	; CRC LOW TABLE  ($100 Bytes)
 CRCTBLH:	.res $100	; CRC HIGH TABLE ($100 Bytes)
 BLKHI:		.byte $01
 BLKLO:		.byte $01
 output_buffer:	.res 520	; For ip65 buffer space
 PARMS:		.res $10, $00
+TEST_FILE_NAME:	.res 34, 0
 
 ;----------------------------------------------------
 ; Operating System Call Tables
@@ -204,6 +210,11 @@ FILE_CR:	.byte $03
 FILE_CR_OPTIONS:
 		.byte $06		; BIN file
 
+; Table for destroy
+
+FILE_RM:	.byte $01
+		.addr TEST_FILE_NAME	; addr len+name
+
 ; Table for read
 
 FILE_RD:	.byte 4
@@ -224,3 +235,10 @@ FILE_WLEN:	.addr PARMS	; max len
 FILE_CL:	.byte 1
 FILE_END:
 FILE_CLN:	.byte 0			; opened file number
+
+; Table for read block
+
+READ_BLK:	.byte 3
+READ_BLK_UNIT:	.byte 0
+READ_BLK_BUF:	.addr PARMS
+READ_BLK_NUM:	.addr $0000		; Block number

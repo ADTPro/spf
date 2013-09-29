@@ -187,45 +187,6 @@ IPShowMsg:
 	rts
 
 ;---------------------------------------------------------
-; SHOWHMSG - Show host-initiated message #Y at current
-; cursor location.  We further constrain messages to be
-; even and within the host message range.
-; Call SHOWHM1 to clear/print at message area.
-;---------------------------------------------------------
-SHOWHM1:
-	sty SLOWY
-	ldx #$00
-	ldy #$16
-	jsr GOTOXY
-	jsr CLREOP
-	ldy SLOWY
-
-SHOWHMSG:
-	tya
-	and #$01	; If it's odd, it's garbage
-	cmp #$01
-	beq HGARBAGE
-	tya
-	clc
-	cmp #PHMMAX
-	bcs HGARBAGE	; If it's greater than max, it's garbage
-	jmp HMOK
-HGARBAGE:
-	ldy #PHMGBG
-HMOK:
-	lda HMSGTBL,Y
-	sta UTILPTR
-	lda HMSGTBL+1,Y
-	sta UTILPTR+1
-	clc
-	tya
-	ror		; Divide Y by 2 to get the message length out of the table
-	tay
-	lda HMSGLENTBL,Y
-	sta WRITE_LEN
-	jmp WRITEMSG_RAW	; Call the regular message printer
-	
-;---------------------------------------------------------
 ; HLINE - Prints a row of underlines at current cursor position
 ;---------------------------------------------------------
 HLINE:
