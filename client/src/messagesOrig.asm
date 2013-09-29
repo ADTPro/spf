@@ -19,55 +19,6 @@
 ;
 
 ;---------------------------------------------------------
-; Host messages
-;---------------------------------------------------------
-
-HMSGTBL:
-	.addr HMGBG,HMFIL,HMFMT,HMDIR,HMTIMEOUT
-
-HMGBG:	asc "GARBAGE RECEIVED FROM HOST"
-	.byte CHR_RETURN
-HMGBG_END =*
-
-HMFIL:	asc "UNABLE TO OPEN FILE"
-	.byte CHR_RETURN
-HMFIL_END =*
-
-HMFMT:	asc "FILE FORMAT NOT RECOGNIZED"
-	.byte CHR_RETURN
-HMFMT_END =*
-
-HMDIR:	asc "UNABLE TO CHANGE DIRECTORY"
-	.byte CHR_RETURN
-HMDIR_END =*
-
-HMTIMEOUT:
-	asc "HOST TIMEOUT"
-	.byte CHR_RETURN
-HMTIMEOUT_END =*
-
-;---------------------------------------------------------
-; Host message lengths
-;---------------------------------------------------------
-HMSGLENTBL:
-	.byte HMGBG_END-HMGBG
-	.byte HMFIL_END-HMFIL
-	.byte HMFMT_END-HMFMT
-	.byte HMDIR_END-HMDIR
-	.byte HMTIMEOUT_END-HMTIMEOUT
-
-;---------------------------------------------------------
-; Host message equates
-;---------------------------------------------------------
-
-PHMGBG	= $00
-PHMFIL	= $02
-PHMFMT	= $04
-PHMDIR	= $06
-PHMTIMEOUT	= $08
-PHMMAX	= $0a		; This must be two greater than the largest host message
-
-;---------------------------------------------------------
 ; Console messages
 ;---------------------------------------------------------
 	MSG01:	asc "%SPF_VERSION%"
@@ -139,12 +90,6 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 	MSG23a:	asc "SELECT WITH RETURN, ESC CANCELS"
 	MSG23a_END =*
 
-	MSG24:	asc "CONFIGURE ADTPRO PARAMETERS"
-	MSG24_END =*
-
-	MSG25:	asc "CHANGE PARAMETERS WITH ARROW KEYS"
-	MSG25_END =*
-
 	;MSG26 - defined locally
 	;MSG27 - defined locally
 
@@ -169,10 +114,6 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 
 	MSG34:	asc "FILE EXISTS"
 	MSG34_END =*
-
-	MSG35:	asc "IMAGE/DRIVE SIZE MISMATCH!"
-		.byte CHR_RETURN
-	MSG35_END =*
 
 	MHFS:
 		asc "<HFS>"
@@ -202,29 +143,11 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 		.byte	CHR_RETURN
 	MLOGO5_END =*
 
-	MWAIT:	asc "WAITING FOR HOST REPLY, ESC CANCELS"
-	MWAIT_END =*
-
 	MCDIR:	asc "DIRECTORY: "
 	MCDIR_END =*
 
-	MFORC:	asc "COPY IMAGE DATA ANYWAY? (Y/N):"
-	MFORC_END =*
-
 	MFEX:	asc "SERIOUSLY!  YOUR DATA WILL DIE! (Y/N):"
 	MFEX_END =*
-
-	MUTHBAD:
-		asc "ETHERNET INIT FAILED; PLEASE RUN CONFIG."
-	MUTHBAD_END =*
-
-	MPREFIX:
-		asc "FILENAME PREFIX: "
-	MPREFIX_END =*
-
-	MINSERTDISK:
-		asc "INSERT THE NEXT DISK TO SEND."
-	MINSERTDISK_END =*
 
 	MFORMAT:
 		asc " CHOOSE VOLUME TO FORMAT"
@@ -271,12 +194,37 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 		asc "NO UNIT IN THAT SLOT AND DRIVE"
 	MUnitNone_END =*
 
-	MNIBTOP:
-		asc "  00000000000000001111111111111111222  "
-		.byte CHR_RETURN
-		inv "  0123456789ABCDEF0123456789ABCDEF012  "
-		.byte CHR_RETURN
-	MNIBTOP_END =*
+	MTimeTitle:
+		asc "BENCHMARK TEST RESULTS"
+	MTimeTitle_END =*
+
+	MTimeHeader:
+		asc "  FILE WRITE   FILE READ   BLOCK READ"
+	MTimeHeader_END =*
+
+	MTimeHeader2:
+		asc " SIZE   KB/S        KB/S         KB/S"
+	MTimeHeader2_END =*
+
+	MTimeHeader3:
+		asc "-----  -----       -----        -----"
+	MTimeHeader3_END =*
+
+	MTimeHeader4:
+		asc " 512K"
+	MTimeHeader4_END =*
+
+	MTimeHeader5:
+		asc "1024K"
+	MTimeHeader5_END =*
+
+	MTimeHeader6:
+		asc "2048K"
+	MTimeHeader6_END =*
+
+	MTimeHeader7:
+		asc "4096K"
+	MTimeHeader7_END =*
 
 	MNULL:	.byte $00
 	MNULL_END =*
@@ -291,14 +239,17 @@ PHMMAX	= $0a		; This must be two greater than the largest host message
 MSGTBL:
 	.addr MSG01,MSG02,MSG03,MSG04,MSG05,MSG06,MSG07,MSG08
 	.addr MSG09,MSG10,MSG11,MSG12,MSG13,MSG14,MSG15,MSG16
-	.addr MSG17,MSGSOU,MSGDST,MSG19,MSG20,MSG21,MSG22,MSG23,MSG23a,MSG24
-	.addr MSG25,MSG26,MSG27,MSG28,MSG28a,MSG29,MSG30,MNONAME,MIOERR
-	.addr MSG34,MSG35
-	.addr MLOGO1,MLOGO2,MLOGO3,MLOGO4,MLOGO5,MWAIT,MCDIR,MFORC,MFEX
-	.addr MUTHBAD, MPREFIX, MINSERTDISK, MFORMAT, MANALYSIS, MNOCREATE
+	.addr MSG17,MSGSOU,MSGDST,MSG19,MSG20,MSG21,MSG22,MSG23,MSG23a
+	.addr MSG26,MSG27,MSG28,MSG28a,MSG29,MSG30,MNONAME,MIOERR
+	.addr MSG34
+	.addr MLOGO1,MLOGO2,MLOGO3,MLOGO4,MLOGO5,MCDIR,MFEX
+	.addr MFORMAT, MANALYSIS, MNOCREATE
 	.addr MVolName, MTheOld, MUnRecog, MDead
-	.addr MProtect, MNoDisk, MNuther, MUnitNone, MNIBTOP
-	.addr MHFS, MSG05a, MSGNoClock, MNULL
+	.addr MProtect, MNoDisk, MNuther, MUnitNone
+	.addr MHFS, MSG05a, MSGNoClock, MTimeTitle, MTimeHeader
+	.addr MTimeHeader2, MTimeHeader3, MTimeHeader4, MTimeHeader5
+	.addr MTimeHeader6, MTimeHeader7
+	.addr MNULL
 
 ;---------------------------------------------------------
 ; Message length table
@@ -330,8 +281,6 @@ MSGLENTBL:
 	.byte MSG22_END-MSG22
 	.byte MSG23_END-MSG23
 	.byte MSG23a_END-MSG23a
-	.byte MSG24_END-MSG24
-	.byte MSG25_END-MSG25
 	.byte MSG26_END-MSG26
 	.byte MSG27_END-MSG27
 	.byte MSG28_END-MSG28
@@ -341,19 +290,13 @@ MSGLENTBL:
 	.byte MNONAME_END-MNONAME
 	.byte MIOERR_END-MIOERR
 	.byte MSG34_END-MSG34
-	.byte MSG35_END-MSG35
 	.byte MLOGO1_END-MLOGO1
 	.byte MLOGO2_END-MLOGO2
 	.byte MLOGO3_END-MLOGO3
 	.byte MLOGO4_END-MLOGO4
 	.byte MLOGO5_END-MLOGO5
-	.byte MWAIT_END-MWAIT
 	.byte MCDIR_END-MCDIR
-	.byte MFORC_END-MFORC
 	.byte MFEX_END-MFEX
-	.byte MUTHBAD_END-MUTHBAD
-	.byte MPREFIX_END-MPREFIX
-	.byte MINSERTDISK_END-MINSERTDISK
 	.byte MFORMAT_END-MFORMAT
 	.byte MANALYSIS_END-MANALYSIS
 	.byte MNOCREATE_END-MNOCREATE
@@ -365,10 +308,17 @@ MSGLENTBL:
 	.byte MNoDisk_END-MNoDisk
 	.byte MNuther_END-MNuther
 	.byte MUnitNone_END-MUnitNone
-	.byte MNIBTOP_END-MNIBTOP
 	.byte MHFS_END-MHFS
 	.byte MSG05a_END-MSG05a
 	.byte MSGNoClock_END-MSGNoClock
+	.byte MTimeTitle_END-MTimeTitle
+	.byte MTimeHeader_END-MTimeHeader
+	.byte MTimeHeader2_END-MTimeHeader2
+	.byte MTimeHeader3_END-MTimeHeader3
+	.byte MTimeHeader4_END-MTimeHeader4
+	.byte MTimeHeader5_END-MTimeHeader5
+	.byte MTimeHeader6_END-MTimeHeader6
+	.byte MTimeHeader7_END-MTimeHeader7
 	.byte $00	; MNULL - null message has no length.
 
 ;---------------------------------------------------------
@@ -376,67 +326,66 @@ MSGLENTBL:
 ;---------------------------------------------------------
 
 PMSG01		= $00
-PMSG02		= $02
-PMSG03		= $04
-PMSG04		= $06
-PMSG05		= $08
-PMSG06		= $0a
-PMSG07		= $0c
-PMSG08		= $0e
-PMSG09		= $10
-PMSG10		= $12
-PMSG11		= $14
-PMSG12		= $16
-PMSG13		= $18
-PMSG14		= $1a
-PMSG15		= $1c
-PMSG16		= $1e
-PMSG17		= $20
-PMSGSOU		= $22
-PMSGDST		= $24
-PMSG19		= $26
-PMSG20		= $28
-PMSG21		= $2a
-PMSG22		= $2c
-PMSG23		= $2e
-PMSG23a		= $30
-PMSG24		= $32
-PMSG25		= $34
-PMSG26		= $36
-PMSG27		= $38
-PMSG28		= $3a
-PMSG28a		= $3c
-PMSG29		= $3e
-PMSG30		= $40
-PMNONAME	= $42
-PMIOERR		= $44
-PMSG34		= $46
-PMSG35		= $48
-PMLOGO1		= $4a
-PMLOGO2		= $4c
-PMLOGO3		= $4e
-PMLOGO4		= $50
-PMLOGO5		= $52
-PMWAIT		= $54
-PMCDIR		= $56
-PMFORC		= $58
-PMFEX		= $5a
-PMUTHBAD	= $5c
-PMPREFIX	= $5e
-PMINSERTDISK	= $60
-PMFORMAT	= $62
-PMANALYSIS	= $64
-PMNOCREATE	= $66
-PMVolName	= $68
-PMTheOld	= $6a
-PMUnRecog	= $6c
-PMDead		= $6e
-PMProtect	= $70
-PMNoDisk	= $72
-PMNuther	= $74
-PMUnitNone	= $76
-PMNIBTOP	= $78
-PMHFS		= $7a
-PMSG05a		= $7c
-PMSGNoClock	= $7e
-PMNULL		= $80
+PMSG02		= PMSG01+2
+PMSG03		= PMSG02+2
+PMSG04		= PMSG03+2
+PMSG05		= PMSG04+2
+PMSG06		= PMSG05+2
+PMSG07		= PMSG06+2
+PMSG08		= PMSG07+2
+PMSG09		= PMSG08+2
+PMSG10		= PMSG09+2
+PMSG11		= PMSG10+2
+PMSG12		= PMSG11+2
+PMSG13		= PMSG12+2
+PMSG14		= PMSG13+2
+PMSG15		= PMSG14+2
+PMSG16		= PMSG15+2
+PMSG17		= PMSG16+2
+PMSGSOU		= PMSG17+2
+PMSGDST		= PMSGSOU+2
+PMSG19		= PMSGDST+2
+PMSG20		= PMSG19+2
+PMSG21		= PMSG20+2
+PMSG22		= PMSG21+2
+PMSG23		= PMSG22+2
+PMSG23a		= PMSG23+2
+PMSG26		= PMSG23a+2
+PMSG27		= PMSG26+2
+PMSG28		= PMSG27+2
+PMSG28a		= PMSG28+2
+PMSG29		= PMSG28a+2
+PMSG30		= PMSG29+2
+PMNONAME	= PMSG30+2
+PMIOERR		= PMNONAME+2
+PMSG34		= PMIOERR+2
+PMLOGO1		= PMSG34+2
+PMLOGO2		= PMLOGO1+2
+PMLOGO3		= PMLOGO2+2
+PMLOGO4		= PMLOGO3+2
+PMLOGO5		= PMLOGO4+2
+PMCDIR		= PMLOGO5+2
+PMFEX		= PMCDIR+2
+PMFORMAT	= PMFEX+2
+PMANALYSIS	= PMFORMAT+2
+PMNOCREATE	= PMANALYSIS+2
+PMVolName	= PMNOCREATE+2
+PMTheOld	= PMVolName+2
+PMUnRecog	= PMTheOld+2
+PMDead		= PMUnRecog+2
+PMProtect	= PMDead+2
+PMNoDisk	= PMProtect+2
+PMNuther	= PMNoDisk+2
+PMUnitNone	= PMNuther+2
+PMHFS		= PMUnitNone+2
+PMSG05a		= PMHFS+2
+PMSGNoClock	= PMSG05a+2
+PMTimeTitle	= PMSGNoClock+2
+PMTimeHeader	= PMTimeTitle+2
+PMTimeHeader2	= PMTimeHeader+2
+PMTimeHeader3	= PMTimeHeader2+2
+PMTimeHeader4	= PMTimeHeader3+2
+PMTimeHeader5	= PMTimeHeader4+2
+PMTimeHeader6	= PMTimeHeader5+2
+PMTimeHeader7	= PMTimeHeader6+2
+PMNULL		= PMTimeHeader7+2

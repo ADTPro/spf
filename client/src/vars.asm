@@ -32,13 +32,11 @@ SendType:	.byte CHR_P	; CHR_P = Normal Put
 ;---------------------------------------------------------
 NUMBLKS:
 	.byte $00, $00	; Number of blocks of a chosen volume
-HOSTBLX:
-	.byte $00, $00	; Number of blocks in a host image
 UNITNBR:
 	.byte $00	; Unit number of chosen volume
 
-SR_WR_C:
-	.byte $00	; A place to save the send/receive/read/write character
+ESCAPE_REQ:
+	.byte $00	; Escape has been hit, so we should abandon processing
 SLOWA:	.byte $00	; A place to save the Accumulator, speed is not important
 SLOWX:	.byte $00	; A place to save the X register, speed is not important
 SLOWY:	.byte $00	; A place to save the Y register, speed is not important

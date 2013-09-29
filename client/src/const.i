@@ -26,7 +26,7 @@ H_BLK	= $0f
 H_NUM1	= $15
 
 ;---------------------------------------------------------
-; Veritcal tab for buffer display
+; Vertical tab for buffer display
 ;---------------------------------------------------------
 V_MSG	= $0b
 V_BUF	= $0f

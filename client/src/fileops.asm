@@ -18,25 +18,11 @@
 ; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;
 
-; File read/write timing: 
-; 1. File open
-; 2. Start timer
-; 3. Read/write bytes in a loop
-; 4. Stop timer
-; 5. Close file
-
-
-; File open routine:
-; ------------------
-; 1. Create file
-; 2. Open file
-; Carry set if not possible
-
 FileOpenFail:			; Nearby branch point
 	sec
 	rts
 
-FileOpen:
+FileOpenNew:
 				; Get rid of the prior version of the file, if it was there
 	CALLOS OS_DESTROY, FILE_RM
 				; Create the new version of the file
@@ -44,7 +30,9 @@ FileOpen:
 	CALLOS_CHECK_POS	; Branch forward on success
 	jmp FileOpenFail
 				; Open the newly created file
-:	CALLOS OS_OPEN, FILE_OP
+:
+FileOpen:
+	CALLOS OS_OPEN, FILE_OP
 	CALLOS_CHECK_POS	; Branch forward on success
 	jmp FileOpenFail
 :	lda FILE_OPN		; copy file number for reading and closing
@@ -64,10 +52,6 @@ FileOpenSuccess:
 ;   - File already open
 ; Returns: carry set on failure 
 ;
-FileWritePrep:
-	ldx #$03
-	lda Spinner,X
-	sta $400
 FileWrite:
 	lda FileSizeInChunks
 	ora FileSizeInChunks+1	; Check for zero at top of loop
@@ -79,7 +63,7 @@ FileWrite1:
 	jmp FileWriteFail
 :	lda $C000		; Let the user interrupt
 	cmp #CHR_ESC		; Escape = abort
-	beq FileWriteQuit
+	beq FileWriteFail1
 	dex			; Manage the spinner
 	bpl @SkipSpin
 	ldx #$03
@@ -100,11 +84,68 @@ FileWriteQuit:
 	clc
 	rts
 
+FileWriteFail1:		; Escape hit
+	lda #$01
+	sta ESCAPE_REQ
 FileWriteFail:		; If we fail to write a full file, close and delete it
-	lda #$20	; Spinner should reflect failure
+	lda #$a0
 	sta $400	; Clear out spinner
 	CALLOS OS_CLOSE, FILE_CL
 	CALLOS OS_DESTROY, FILE_RM
+	sec
+	rts
+
+;
+; FileRead: read in successive 16k buffers until end of file
+; Entry conditions: 
+;   - FileSizeInChunks set to number of 16k chunks to write
+;   - FILE_RD set with file number
+;   - File already open
+; Returns: carry set on failure 
+;
+FileReadPrep:
+	ldx #$03
+	lda Spinner,X
+	sta $400
+FileRead:
+	lda FileSizeInChunks
+	ora FileSizeInChunks+1	; Check for zero at top of loop
+	bne FileRead1
+	jmp FileReadQuit
+FileRead1:
+	CALLOS OS_READFILE, FILE_RD	; Read 16k
+	CALLOS_CHECK_POS	; Branch forward on success
+	jmp FileReadFail
+:	lda $C000		; Let the user interrupt
+	cmp #CHR_ESC		; Escape = abort
+	beq FileReadFail1
+	dex			; Manage the spinner
+	bpl @RSkipSpin
+	ldx #$03
+@RSkipSpin:
+	lda Spinner,X
+	sta $400
+	dec FileSizeInChunks	; Decrement the 16-bit counter
+	lda FileSizeInChunks
+	cmp #$ff
+	bne FileRead
+	dec FileSizeInChunks+1
+	jmp FileRead
+
+FileReadQuit:
+	lda #$a0
+	sta $400	; Clear out spinner
+	CALLOS OS_CLOSE, FILE_CL
+	clc
+	rts
+
+FileReadFail1:		; Escape hit
+	lda #$01
+	sta ESCAPE_REQ
+FileReadFail:
+	lda #$a0
+	sta $400	; Clear out spinner
+	CALLOS OS_CLOSE, FILE_CL
 	sec
 	rts
 
@@ -116,5 +157,4 @@ Filename_512K:	.asciiz "/FILE512K"	; 32 hunks of 16k
 Filename_1M:	.asciiz "/FILE001M"	; 64 hunks of 16k
 Filename_2M:	.asciiz "/FILE002M"	; 128 hunks of 16k
 Filename_4M:	.asciiz "/FILE004M"	; 256 hunks of 16k
-Filename_8M:	.asciiz "/FILE008M"	; 512 hunks of 16k
 Spinner:	ascz "/|\-"

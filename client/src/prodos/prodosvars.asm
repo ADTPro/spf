@@ -21,7 +21,7 @@
 .export output_buffer
 
 .global CAPBLKS, DEVICES, PARMBUF, BLKLO, BLKHI, BIGBUF, CRCTBLL, CRCTBLH
-.global NUMBLKS, HOSTBLX, UNITNBR
+.global NUMBLKS, UNITNBR, ESCAPE_REQ
 .global COMMSLOT, PSPEED, PSAVE, PGSSLOT, SR_WR_C, SLOWA, SLOWX, SLOWY
 .global PCCRC, COLDSTART, BAUD, NonDiskII, SendType
 
@@ -84,7 +84,7 @@ GET_PFX_PLIST:
 
 FILE_OP:	.byte 3
 FILE_NAME:	.addr TEST_FILE_NAME	; addr len+name
-FILE_BUF_PTR:	.addr BIGBUF+1024	; 1024 bytes buffer
+FILE_BUF_PTR:	.addr BIGBUF		; 1024 bytes buffer
 FILE_OPN:	.byte 0			; opened file number
 
 ; Table for create
@@ -107,17 +107,17 @@ FILE_RM:	.byte $01
 
 FILE_RD:	.byte 4
 FILE_RDN:	.byte 0			; opened file number
-FILE_RADR:	.addr BIGBUF		; read addr
+FILE_RADR:	.addr BIGBUF+1024	; read addr
 FILE_RLEN:	.addr $4000		; max len - 16k
-FILE_RALEN:	.addr $FFFF		; real len of loaded file
+FILE_RALEN:	.addr $ffff		; real len of loaded file
 
 ; Table for write
 
 FILE_WR:	.byte 4
 FILE_WRN:	.byte 0			; opened file number
-FILE_WADR:	.addr BIGBUF		; write addr
+FILE_WADR:	.addr BIGBUF+1024	; write addr
 FILE_WLEN:	.addr $4000		; max len - 16k
-FILE_WALEN:	.byte 0,0		; real len of loaded file
+FILE_WALEN:	.addr $0000		; real len of loaded file
 
 ; Table for close
 

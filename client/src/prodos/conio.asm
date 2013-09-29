@@ -178,42 +178,6 @@ CLRMSGAREA:
 	rts
 
 ;---------------------------------------------------------
-; SHOWHMSG - Show null-terminated host message #Y at current
-; cursor location.  We further constrain messages to be
-; even and within the host message range.
-; Call SHOWHM1 to clear/print at message area.
-;---------------------------------------------------------
-SHOWHM1:
-	sty SLOWY
-	lda #$00
-	sta CH
-	lda #$16
-	jsr TABV
-	jsr CLREOP
-	ldy SLOWY
-
-SHOWHMSG:
-	tya
-	and #$01	; If it's odd, it's garbage
-	cmp #$01
-	beq HGARBAGE
-	tya
-	clc
-	cmp #PHMMAX
-	bcs HGARBAGE	; If it's greater than max, it's garbage
-	jmp HMOK
-HGARBAGE:
-	ldy #PHMGBG
-HMOK:
-	lda HMSGTBL,Y
-	sta UTILPTR
-	lda HMSGTBL+1,Y
-	sta UTILPTR+1
-
-	ldy #$00
-	jmp WRITEMSGLOOP	; Call the regular message printer
-	
-;---------------------------------------------------------
 ; READ_LINE - Read a line of input from the console
 ;---------------------------------------------------------
 READ_LINE:

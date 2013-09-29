@@ -37,11 +37,170 @@ TimeTest:
 	jsr PICKVOL	; A now has index into DEVICES table; UNITNBR holds chosen unit
 	bmi TimeTestDone1
 	jsr GETVOLNAME	; TEST_FILE_NAME now holds the volume prefix and VOLNAMELEN is set
-	ldx #$00
-	ldy #$0b
-	jsr GOTOXY
+	jsr SetupTTScreen
 
-; 512K
+; Write - 512K
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_512K,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #Filename_Len
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpenNew
+	bcc :+
+	jmp TimeTestPromptDone
+:	lda #32		; 32 chunks = 512K
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	php
+	jsr GetTime	; End timer
+	plp
+	bcc TT1MW
+			; Done; jump to reading code
+	jmp WritingPhaseDone
+
+; 1M
+TT1MW:
+			; Print prior results
+	lda #$00	; Prior timing was for 512k ($0200)
+	sta <dividend
+	lda #$02
+	sta <dividend+1
+	ldx #$06
+	ldy #$06
+	jsr GOTOXY
+	jsr PrintTimeDifference
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_1M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #Filename_Len
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpenNew
+	bcc :+
+	jmp TimeTestPromptDone
+:	lda #64		; 64 chunks = 1M
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	php
+	jsr GetTime	; End timer
+	plp
+	bcc TT2M
+			; Done; jump to reading code
+	jmp WritingPhaseDone
+
+; 2M
+TT2M:
+			; Print prior results
+	lda #$00	; Prior timing was for 1M ($0400K)
+	sta <dividend
+	lda #$04
+	sta <dividend+1
+	ldx #$06
+	ldy #$07
+	jsr GOTOXY
+	jsr PrintTimeDifference
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_2M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #Filename_Len
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpenNew
+	bcc :+
+	jmp TimeTestPromptDone
+:	lda #128	; 128 chunks = 2M
+	sta FileSizeInChunks
+	lda #$00
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	php
+	jsr GetTime	; End timer
+	plp
+	bcc TT4M
+			; Done; jump to reading code
+	jmp WritingPhaseDone
+
+; 4M
+TT4M:
+			; Print prior results
+	lda #$00	; Prior timing was for 2M ($0800K)
+	sta <dividend
+	lda #$08
+	sta <dividend+1
+	ldx #$06
+	ldy #$08
+	jsr GOTOXY
+	jsr PrintTimeDifference
+	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
+	inx
+	ldy #$00
+:	lda Filename_4M,Y
+	sta TEST_FILE_NAME,X
+	inx
+	iny
+	cpy #Filename_Len
+	bne :-
+	dex
+	stx TEST_FILE_NAME
+	jsr FileOpenNew
+	bcc :+
+	jmp TimeTestPromptDone
+:	lda #0
+	sta FileSizeInChunks
+	lda #$01	; 256 chunks = 4M
+	sta FileSizeInChunks+1
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr FileWrite
+	php
+	jsr GetTime	; End timer
+	plp
+	bcs WritingPhaseDone
+			; Only report on successful test
+	lda #$00	; Prior timing was for 4M ($1000K)
+	sta <dividend
+	lda #$10
+	sta <dividend+1
+	ldx #$06
+	ldy #$09
+	jsr GOTOXY
+	jsr PrintTimeDifference
+
+WritingPhaseDone:
+	lda ESCAPE_REQ		; Check if we got here because of escape; if so, we're all done.
+	beq ReadingPhaseBegin	; Zero means no escape.
+	lda #$00
+	sta ESCAPE_REQ
+	jmp TimeTestPromptDone
+
+ReadingPhaseBegin:	
+; Read - 512K
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
 	ldy #$00
@@ -55,24 +214,31 @@ TimeTest:
 	stx TEST_FILE_NAME
 	jsr FileOpen
 	bcc :+
-	jmp TimeTestDone1
+	jmp TimeTestPromptDone
 :	lda #32
 	sta FileSizeInChunks
 	lda #$00
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime
-	jsr FileWrite
+	jsr FileRead
 	php
 	jsr GetTime	; End timer
 	plp
-	bcc TT1M
-			; Done; jump to reading code
-	jmp TimeTestPromptDone
+	bcc TT1MR
+			; Done done done
+	jmp ReadingPhaseDone
 
-; 1M
-TT1M:
+; Read - 1M
+TT1MR:
 			; Print prior results
+	lda #$00	; Prior timing was for 512k ($0200)
+	sta <dividend
+	lda #$02
+	sta <dividend+1
+	ldx #$12
+	ldy #$06
+	jsr GOTOXY
 	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
@@ -87,24 +253,30 @@ TT1M:
 	stx TEST_FILE_NAME
 	jsr FileOpen
 	bcc :+
-	jmp TimeTestDone1
+	jmp TimeTestPromptDone
 :	lda #64
 	sta FileSizeInChunks
 	lda #$00
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime
-	jsr FileWrite
+	jsr FileRead
 	php
 	jsr GetTime	; End timer
 	plp
-	bcc TT2M
-			; Done; jump to reading code
-	jmp TimeTestPromptDone
+	bcc TT2MR
+			; Done done done
+	jmp ReadingPhaseDone
 
-; 2M
-TT2M:
+TT2MR:
 			; Print prior results
+	lda #$00	; Prior timing was for 1M ($0400)
+	sta <dividend
+	lda #$04
+	sta <dividend+1
+	ldx #$12
+	ldy #$07
+	jsr GOTOXY
 	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
@@ -119,24 +291,30 @@ TT2M:
 	stx TEST_FILE_NAME
 	jsr FileOpen
 	bcc :+
-	jmp TimeTestDone1
+	jmp TimeTestPromptDone
 :	lda #128
 	sta FileSizeInChunks
 	lda #$00
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime
-	jsr FileWrite
+	jsr FileRead
 	php
 	jsr GetTime	; End timer
 	plp
-	bcc TT4M
-			; Done; jump to reading code
-	jmp TimeTestPromptDone
+	bcc TT4MR
+			; Done done done
+	jmp ReadingPhaseDone
 
-; 4M
-TT4M:
+TT4MR:
 			; Print prior results
+	lda #$00	; Prior timing was for 2M ($0800)
+	sta <dividend
+	lda #$08
+	sta <dividend+1
+	ldx #$12
+	ldy #$08
+	jsr GOTOXY
 	jsr PrintTimeDifference
 	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
 	inx
@@ -151,53 +329,36 @@ TT4M:
 	stx TEST_FILE_NAME
 	jsr FileOpen
 	bcc :+
-	jmp TimeTestDone1
+	jmp TimeTestPromptDone
 :	lda #0
 	sta FileSizeInChunks
-	lda #$01	; 256
+	lda #$01
 	sta FileSizeInChunks+1
 	jsr GetTime	; Start timer
 	jsr MoveTime
-	jsr FileWrite
+	jsr FileRead
 	php
 	jsr GetTime	; End timer
 	plp
-	bcc TT8M
-			; Done; jump to reading code
+	bcs ReadingPhaseDone
+			; Only report on successful test
+	lda #$00	; Prior timing was for 4M ($1000K)
+	sta <dividend
+	lda #$10
+	sta <dividend+1
+	ldx #$12
+	ldy #$09
+	jsr GOTOXY
+	jsr PrintTimeDifference
+
+ReadingPhaseDone:
+	lda ESCAPE_REQ		; Check if we got here because of escape; if so, we're all done.
+	beq ReadBlockPhaseBegin	; Zero means no escape.
+	lda #$00
+	sta ESCAPE_REQ
 	jmp TimeTestPromptDone
 
-; 8M
-TT8M:
-			; Print prior results
-	jsr PrintTimeDifference
-	ldx VOLNAMELEN	; X now has the length of the test file name's prefix (volume)
-	inx
-	ldy #$00
-:	lda Filename_8M,Y
-	sta TEST_FILE_NAME,X
-	inx
-	iny
-	cpy #Filename_Len
-	bne :-
-	dex
-	stx TEST_FILE_NAME
-	jsr FileOpen
-	bcc :+
-	jmp TimeTestDone1
-:	lda #0
-	sta FileSizeInChunks
-	lda #$02	; 512
-	sta FileSizeInChunks+1
-	jsr GetTime	; Start timer
-	jsr MoveTime
-	jsr FileWrite
-	php
-	jsr GetTime	; End timer
-	plp
-	bcs TimeTestPromptDone
-			; Only report on successful test
-	jsr PrintTimeDifference
-
+ReadBlockPhaseBegin:
 
 ; All done - print a final message
 TimeTestPromptDone:
@@ -224,7 +385,8 @@ MoveTime:
 ; 
 ;
 PrintTimeDifference:
-	jsr CROUT
+	lda #$00
+	sta Elapsed+1
 			; Calculate seconds
 	sec
 	lda TimeNow+2
@@ -232,7 +394,7 @@ PrintTimeDifference:
 	bcs :+
 	adc #60
 	dec TimeNow+1 
-:	sta Elapsed+2
+:	sta Elapsed
 			; Calculate minutes
 	sec
 	lda TimeNow+1
@@ -240,24 +402,107 @@ PrintTimeDifference:
 	bcs :+
 	adc #60
 	dec TimeNow
-:	sta Elapsed+1
-			; Calculate hours
-	sec
-	lda TimeNow
-	sbc Time2
-	bcs :+
-	adc #24
-:	sta Elapsed
-			; Print them back out, in reverse order
-	jsr ToDecimal
+:	tax		; X now holds number of minutes
+	beq @done
+@more:	clc		; Multiply minutes by 60
+	lda Elapsed
+	adc #60		; Add 60 seconds for each minute
+	sta Elapsed
+	bcc @next
+	inc Elapsed+1
+@next:	dex
+	bne @more
+@done:
+	lda Elapsed
+	sta <divisor
 	lda Elapsed+1
-	jsr ToDecimal
-	lda Elapsed+2
-	jsr ToDecimal
+	sta <divisor+1
+	jsr divide
+
+	lda #CHR_SP
+	jsr COUT1
+
+	lda <BLKPTR	; dividend
+	ldx <BLKPTR+1	; dividend+1
+	ldy #CHR_SP
+	jsr PRD
+			; result = dividend
+	rts
+
+
+;
+; 16-bit Divide from http://codebase64.org/doku.php?id=base:6502_6510_maths
+;
+dividend = BLKPTR ; numerator
+divisor = UTILPTR ; denominator
+remainder = CRC
+result = dividend ;save memory by reusing divident to store the result
+
+divide:	lda #0	        ;preset remainder to 0
+	sta remainder
+	sta remainder+1
+	ldx #16	        ;repeat for each bit: ...
+
+divloop:
+	asl dividend	;dividend lb & hb*2, msb -> Carry
+	rol dividend+1	
+	rol remainder	;remainder lb & hb * 2 + msb from carry
+	rol remainder+1
+	lda remainder
+	sec
+	sbc divisor	;substract divisor to see if it fits in
+	tay	        ;lb result -> Y, for we may need it later
+	lda remainder+1
+	sbc divisor+1
+	bcc @skip	;if carry=0 then divisor didn't fit in yet
+
+	sta remainder+1	;else save substraction result as new remainder,
+	sty remainder	
+	inc result	;and INCrement result cause divisor fit in 1 times
+
+@skip:	dex
+	bne divloop	
+	rts
+
+SetupTTScreen:
+	jsr HOME
+	ldx #$09
+	ldy #$00
+	jsr GOTOXY
+	ldy #PMTimeTitle	; BENCHMARK TEST RESULTS
+	jsr WRITEMSG
+	lda #$02
+	jsr TABV
+	ldy #PMTimeHeader	; FILE WRITE    FILE READ    BLOCK READ
+	jsr WRITEMSGLEFT
+	lda #$04
+	jsr TABV
+	ldy #PMTimeHeader2	;  SIZE KB/S         KB/S          KB/S
+	jsr WRITEMSGLEFT
+	lda #$05
+	jsr TABV
+	ldy #PMTimeHeader3	; ----- ----         ----          ----
+	jsr WRITEMSGLEFT
+	jsr CROUT
+	ldy #PMTimeHeader4	;  512K
+	jsr WRITEMSG
+	jsr CROUT
+	ldy #PMTimeHeader5	; 1024K
+	jsr WRITEMSG
+	jsr CROUT
+	ldy #PMTimeHeader6	; etc.
+	jsr WRITEMSG
+	jsr CROUT
+	ldy #PMTimeHeader7
+	jsr WRITEMSG
+	jsr CROUT
+
+	ldy #PMSG30		; Testing in progress; esc to stop.
+	jsr WRITEMSGAREA	
 	rts
 
 TimeNow:
 	.res 4,0	; Filled in by gettime.asm: Hours, Minutes, Seconds, Hundredths	
 Time2:	.res 4,0
 Elapsed:
-	.res 4
+	.res 2		; Total elapsed seconds

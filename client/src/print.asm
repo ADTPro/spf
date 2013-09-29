@@ -26,42 +26,6 @@
 .global PMANALYSIS
 
 ;---------------------------------------------------------
-; PREPPRG
-; 
-; Sets up the progress screen
-;
-; Input:
-;   NUMBLKS
-;   NUMBLKS+1 contain the total capacity of the volume
-;---------------------------------------------------------
-PREPPRG:
-	stx SLOWX	; Preserve X
-	jsr HOME
-	jsr SHOWLOGO
-	ldx #H_BLK	; Column
-	ldy #V_MSG	; Row
-	jsr GOTOXY
-	ldy #PMSG09
-	jsr WRITEMSG
-	lda #CHR_SP
-	jsr COUT	; Space over one character
-
-	lda NUMBLKS
-	ldx NUMBLKS+1
-	ldy #CHR_0
-	jsr PRD
-
-	ldx #$00	; Column
-	ldy #V_BUF-2	; Row
-	jsr GOTOXY
-	jsr HLINE	; Print out a row of underlines
-	lda #V_BUF+1	; Row
-	jsr TABV
-	jsr HLINE
-	ldx SLOWX	; Restore X
-	rts
-
-;---------------------------------------------------------
 ; ToDecimal
 ; Prints accumulator as a decimal number
 ; The number is right/space justified to 3 digits
@@ -149,52 +113,4 @@ NUM:	.byte $00, $00
 CHROVER:
 	ldy CH
 	sta (BASL),Y
-	rts
-
-;---------------------------------------------------------
-; nibtitle - show title screen for nibble disk transfer
-;---------------------------------------------------------
-nibtitle:
-	jsr HOME
-	jsr SHOWLOGO
-	jsr CROUT
-	jsr CROUT
-	ldx #$27
-	jsr HLINEX
-	jsr CROUT
-	ldy #PMNIBTOP
-	jsr WRITEMSG
-	ldx #$38		; show one block left and right
-	ldy #$0e		; on line $0e at end of line
-	jsr GOTOXY 
-	lda #_I' '		; inverse space char
-	jsr COUT
-	lda #0			; at start of line
-	SET_HTAB
-	jsr COUT
-	lda #_I'>'		; inverse character!
-	iny			; next position in line
-	sta (BASL),y
-	lda #_I'<'		; inverse character!
-	ldy #37			; one-but-last position in line
-	sta (BASL),y
-	lda SendType		; check to see if we need to
-	cmp #CHR_H		; display halftrack line
-	bne nibtdone
-	lda #$0f		; move one line down
-	sta CV
-	jsr TABV
-	lda #_I'.'		; put an inverse . on screen
-	ldy #0			;  at horiz pos 0
-	sta (BASL),y
-	lda #'5'		; and now put a 5 so we see
-	ldy #1			;  .5 which means halftrk
-	sta (BASL),y
-	lda #_I' '		; put 2 inverse spaces at the end
-	ldy #37
-	sta (BASL),y
-	iny
-	sta (BASL),y
-
-nibtdone:
 	rts
