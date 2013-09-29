@@ -39,7 +39,7 @@ FoundClockGS:
 
 FoundClockNoSlot:
 ;---------------------------------------------------------
-; Patch the entry point of GetTIme to the NoSlotClock version
+; Patch the entry point of GetTime to the NoSlotClock version
 ;---------------------------------------------------------
 	lda #<GetTimeNSC
 	sta GetTime+1
@@ -356,15 +356,15 @@ FindClockSlotLoop:
 	sta UTILPTR+1
 	ldy #$00		; Lookup offset
 	lda (UTILPTR),y
-	cmp #$10		; Is $Cn00 == $10?
+	cmp #$08		; Is $Cn00 == $08?
 	bne NotThunder
 	iny			; Lookup offset
 	lda (UTILPTR),y
-	cmp #$f0		; Is $Cn01 == $f0?
+	cmp #$78		; Is $Cn01 == $78?
 	bne NotThunder
 	iny			; Lookup offset
 	lda (UTILPTR),y
-	cmp #$50		; Is $Cn02 == $50?
+	cmp #$28		; Is $Cn02 == $28?
 	bne NotThunder
 ; Ok, we have a set of signature bytes for a Thunderclock.
 	stx ClockSlot
@@ -385,6 +385,15 @@ FindClockSlotDone:
 ClockSlot:	.byte 0
 
 PrepThunderclock:
+;---------------------------------------------------------
+; Patch the entry point of GetTime to the Thunderclock version
+;---------------------------------------------------------
+	lda #<GetTimeThunderclock
+	sta GetTime+1
+	lda #>GetTimeThunderclock
+	sta GetTime+2
+	rts
+
 	rts
 
 
