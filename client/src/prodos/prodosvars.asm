@@ -124,3 +124,11 @@ FILE_WALEN:	.addr $0000		; real len of loaded file
 FILE_CL:	.byte 1
 FILE_END:
 FILE_CLN:	.byte 0			; opened file number
+
+; Table for read block
+
+READ_BLK:	.byte 3
+READ_BLK_UNIT:	.byte 0
+READ_BLK_BUF:	.addr BIGBUF
+READ_BLK_NUM:	.addr $0000		; Block number
+

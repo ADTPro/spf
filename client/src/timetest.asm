@@ -350,6 +350,7 @@ TT4MR:
 	ldy #$09
 	jsr GOTOXY
 	jsr PrintTimeDifference
+	jmp ReadBlockPhaseBegin
 
 ReadingPhaseDone:
 	lda ESCAPE_REQ		; Check if we got here because of escape; if so, we're all done.
@@ -359,7 +360,33 @@ ReadingPhaseDone:
 	jmp TimeTestPromptDone
 
 ReadBlockPhaseBegin:
-
+	lda NUMBLKS
+	sta FileSizeInChunks
+	lda NUMBLKS+1
+	sta FileSizeInChunks+1
+	lda UNITNBR
+	sta READ_BLK_UNIT
+	jsr GetTime	; Start timer
+	jsr MoveTime
+	jsr BlockRead
+	php
+	jsr GetTime	; End timer
+	plp
+	bcs TimeTestPromptDone
+	lda NUMBLKS
+	sta <dividend
+	lda NUMBLKS+1
+	sta <dividend+1
+	; Need to divide the dividend by 2... since we currently hold blocks, which are 512 bytes and not 1K.
+	lda dividend+1	; Load the MSB
+        asl a		; Copy the sign bit into C
+        ror dividend+1	; And back into the MSB
+        ror dividend	; Rotate the LSB as normal
+	ldx #$1f
+	ldy #$06
+	jsr GOTOXY
+	jsr PrintTimeDifference
+	
 ; All done - print a final message
 TimeTestPromptDone:
 	lda #$15

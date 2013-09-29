@@ -56,14 +56,14 @@ FileWrite:
 	lda FileSizeInChunks
 	ora FileSizeInChunks+1	; Check for zero at top of loop
 	bne FileWrite1
-	jmp FileWriteQuit
+	jmp FileQuit
 FileWrite1:
 	CALLOS OS_WRITEFILE, FILE_WR	; Write 16k
 	CALLOS_CHECK_POS	; Branch forward on success
-	jmp FileWriteFail
+	jmp FileFail
 :	lda $C000		; Let the user interrupt
 	cmp #CHR_ESC		; Escape = abort
-	beq FileWriteFail1
+	beq FileFail1
 	dex			; Manage the spinner
 	bpl @SkipSpin
 	ldx #$03
@@ -77,21 +77,14 @@ FileWrite1:
 	dec FileSizeInChunks+1
 	jmp FileWrite
 
-FileWriteQuit:
-	lda #$a0
-	sta $400	; Clear out spinner
-	CALLOS OS_CLOSE, FILE_CL
-	clc
-	rts
-
-FileWriteFail1:		; Escape hit
+FileFail1:		; Escape hit
 	lda #$01
 	sta ESCAPE_REQ
-FileWriteFail:		; If we fail to write a full file, close and delete it
+FileFail:
+	CALLOS OS_CLOSE, FILE_CL
+BlockFail:
 	lda #$a0
 	sta $400	; Clear out spinner
-	CALLOS OS_CLOSE, FILE_CL
-	CALLOS OS_DESTROY, FILE_RM
 	sec
 	rts
 
@@ -103,22 +96,18 @@ FileWriteFail:		; If we fail to write a full file, close and delete it
 ;   - File already open
 ; Returns: carry set on failure 
 ;
-FileReadPrep:
-	ldx #$03
-	lda Spinner,X
-	sta $400
 FileRead:
 	lda FileSizeInChunks
 	ora FileSizeInChunks+1	; Check for zero at top of loop
 	bne FileRead1
-	jmp FileReadQuit
+	jmp FileQuit
 FileRead1:
 	CALLOS OS_READFILE, FILE_RD	; Read 16k
 	CALLOS_CHECK_POS	; Branch forward on success
-	jmp FileReadFail
+	jmp FileFail
 :	lda $C000		; Let the user interrupt
 	cmp #CHR_ESC		; Escape = abort
-	beq FileReadFail1
+	beq FileFail1
 	dex			; Manage the spinner
 	bpl @RSkipSpin
 	ldx #$03
@@ -132,21 +121,40 @@ FileRead1:
 	dec FileSizeInChunks+1
 	jmp FileRead
 
-FileReadQuit:
-	lda #$a0
-	sta $400	; Clear out spinner
-	CALLOS OS_CLOSE, FILE_CL
-	clc
+BlockRead:
+	; FileSizeInChunks should now hold the number of this volume's blocks (2 bytes)
+	lda FileSizeInChunks
+	ora FileSizeInChunks+1	; Check for zero at top of loop
+	bne BlockRead1
+	jmp BlockQuit
+BlockRead1:
+	CALLOS OS_READBLOCK, READ_BLK	; Read one block
+	CALLOS_CHECK_POS	; Branch forward on success
+	jmp BlockFail
+:	lda $C000		; Let the user interrupt
+	cmp #CHR_ESC		; Escape = abort
+	beq FileFail1
+	dec FileSizeInChunks	; Decrement the 16-bit counter
+	lda FileSizeInChunks
+	cmp #$ff
+	bne BlockRead
+	dec FileSizeInChunks+1
+	dex			; Manage the spinner
+	bpl @BSkipSpin
+	ldx #$03
+@BSkipSpin:
+	lda Spinner,X
+	sta $400
+	jmp BlockRead
+	
 	rts
 
-FileReadFail1:		; Escape hit
-	lda #$01
-	sta ESCAPE_REQ
-FileReadFail:
+FileQuit:
+	CALLOS OS_CLOSE, FILE_CL
+BlockQuit:
 	lda #$a0
 	sta $400	; Clear out spinner
-	CALLOS OS_CLOSE, FILE_CL
-	sec
+	clc
 	rts
 
 FileSizeInChunks:
