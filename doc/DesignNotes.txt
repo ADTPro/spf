@@ -1,0 +1,52 @@
+File read/write timing: 
+1. File open
+2. Start timer
+3. Read/write bytes in a loop
+4. Stop timer
+5. Close file
+
+Block read timing:
+1. Start timer
+2. Read blocks in a loop (How many?  All in a volume?)
+3. Stop timer
+
+ProDOS call $80: READ_BLOCK - one block at a time
+
+$C1: DESTROY
+$C0: CREATE
+$C8: OPEN
+$CA: READ - 16k buffer
+$CB: WRITE - 16k buffer
+$CC: CLOSE
+
+512K:	32 buffers
+1M:	64 buffers
+2M:	128 buffers
+4M:	256 buffers
+8M:	512 buffers
+16M:	1024 buffers
+
+
+ 0123456789012345678901234567890123456789
+
+0         BENCHMARK TEST RESULTS
+1
+2 FILE WRITE    FILE READ    BLOCK READ
+3        8            15            23      
+4  SIZE   KB/S         KB/S          KB/S
+5 -----  -----        -----         -----
+6  512K  65536        65536         65536
+7 1024K  204                        
+8 2048K  204
+9 4096K  186
+
+
+GSport running at 8mhz:
+
+BenchmarkeD:
+Typical file write speed is 204-215
+Typical file read speed is 409-431
+
+SPF:
+Typical file write speed is 170-204
+Typical file write speed seems to be out of reach
