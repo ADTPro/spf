@@ -173,6 +173,11 @@
 
 		<echo message="Adding SPF to 5.25 disk image..."/>
 		<appleCommander command="p" input="${builddir}/SPF.BIN" imagename="${distName}/disks/${diskName}.DSK" filename="SPF.BIN" type="SYS" address="2048"/>
+		<!--
+		Put a nice volume name on the disk image
+		-->
+		<appleCommander command="n" imagename="${distName}/disks/${diskName}.DSK" volname="${volName}"/>
+		<delete file="${builddir}/SPFSOS" />
 		<delete file="${builddir}/SPF" />
 		<delete file="${builddir}/SPF.SYSTEM" />
 		<delete file="${builddir}/STARTUP.SYSTEM" />
@@ -185,10 +190,6 @@
 		-->
 		<echo message="Adding SPFSOS to 5.25 disk image..."/>
 		<appleCommander command="p" input="${builddir}/SPFSOS" imagename="${distName}/disks/${diskName}.DSK" filename="SOS.INTERP" type="SOS" address="0000"/>
-		<!--
-		Put a nice volume name on the disk images
-		-->
-		<appleCommander command="n" imagename="${distName}/disks/${diskName}.DSK" volname="${volName}"/>
 		<delete file="${builddir}/SPFSOS" />
 	</target>
 </project>
