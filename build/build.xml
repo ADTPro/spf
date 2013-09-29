@@ -4,7 +4,7 @@
 -->
 
 <project name="SPF" default="all" basedir="..">
-	<property name="versionString" value="v.r.m" />
+	<property name="versionString" value="0.0.3" />
 	<property name="distName" value="SPF-${versionString}" />
 	<property name="diskName" value="SPF-${versionString}" />
 	<property name="volName" value="SPF.${versionString}" />
@@ -33,6 +33,7 @@
 	</target>
 
 	<target name="all" depends="wipe, clean, setup, assemble, builddsk" description="Bulid everything after wiping the output directory.">
+		<copy file="${basedir}/doc/SPFHow-To.doc" tofile="${builddir}/${distName}/SPFHow-To.doc" />
 	</target>
 
 	<target name="dev" depends="clean, setup, assemble, builddsk" description="Build everything but the Java GUI; don't wipe the output directory.">

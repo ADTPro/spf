@@ -50,3 +50,11 @@ Typical file read speed is 409-431
 SPF:
 Typical file write speed is 170-204
 Typical file write speed seems to be out of reach
+
+GSport running on a ROM03 Apple IIGS with 8MHz ZipGS with CFFA3000 3.1, 32MB .PO:
+
+File Wr Rd  Blocks
+512k: 30 56 106
+1024k: 30 51
+2048k: 29 52
+4096k: 29 52
