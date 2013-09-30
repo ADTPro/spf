@@ -4,7 +4,7 @@
 -->
 
 <project name="SPF" default="all" basedir="..">
-	<property name="versionString" value="0.0.3" />
+	<property name="versionString" value="v.r.m" />
 	<property name="distName" value="SPF-${versionString}" />
 	<property name="diskName" value="SPF-${versionString}" />
 	<property name="volName" value="SPF.${versionString}" />
@@ -40,7 +40,7 @@
 	</target>
 
 	<target name="setup">
-		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/${diskName}.DSK" />
 		<condition property="SOS-needed">
 			<not>
 				<isset property="skipSOS" />
@@ -71,7 +71,7 @@
 		<delete file="${builddir}/${distName}.tar.gz" />
 		<delete file="${builddir}/${distName}.zip" />
 		<delete file="${builddir}/${distName}.dmg" />
-		<delete file="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<delete file="${builddir}/${distName}/${diskName}.DSK" />
 		<delete>
 			<fileset dir="${projdir}/client/src" includes="**/*.o"/>
 			<fileset dir="${projdir}/client/src" includes="**/*.map"/>
@@ -163,21 +163,21 @@
 		<!--
 		Start disk images containing the release number
 		-->
-		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/disks/${diskName}.DSK" />
+		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/${diskName}.DSK" />
 		<!--
 		Put the assembled programs on the disk images
 		-->
 
 		<echo message="Adding startup files to 5.25 disk image..."/>
-		<appleCommander command="p" input="${builddir}/STARTUP.SYSTEM" imagename="${distName}/disks/${diskName}.DSK" filename="STARTUP.SYSTEM" type="SYS" address="8192"/>
-		<appleCommander command="p" input="${builddir}/SPF" imagename="${distName}/disks/${diskName}.DSK" filename="SPF" type="SYS" address="8192"/>
+		<appleCommander command="p" input="${builddir}/STARTUP.SYSTEM" imagename="${distName}/${diskName}.DSK" filename="STARTUP.SYSTEM" type="SYS" address="8192"/>
+		<appleCommander command="p" input="${builddir}/SPF" imagename="${distName}/${diskName}.DSK" filename="SPF" type="SYS" address="8192"/>
 
 		<echo message="Adding SPF to 5.25 disk image..."/>
-		<appleCommander command="p" input="${builddir}/SPF.BIN" imagename="${distName}/disks/${diskName}.DSK" filename="SPF.BIN" type="SYS" address="2048"/>
+		<appleCommander command="p" input="${builddir}/SPF.BIN" imagename="${distName}/${diskName}.DSK" filename="SPF.BIN" type="SYS" address="2048"/>
 		<!--
 		Put a nice volume name on the disk image
 		-->
-		<appleCommander command="n" imagename="${distName}/disks/${diskName}.DSK" volname="${volName}"/>
+		<appleCommander command="n" imagename="${distName}/${diskName}.DSK" volname="${volName}"/>
 		<delete file="${builddir}/SPF" />
 		<delete file="${builddir}/SPF.SYSTEM" />
 		<delete file="${builddir}/STARTUP.SYSTEM" />
@@ -189,7 +189,7 @@
 		Put the assembled programs on the disk images
 		-->
 		<echo message="Adding SPFSOS to 5.25 disk image..."/>
-		<appleCommander command="p" input="${builddir}/SPFSOS" imagename="${distName}/disks/${diskName}.DSK" filename="SOS.INTERP" type="SOS" address="0000"/>
+		<appleCommander command="p" input="${builddir}/SPFSOS" imagename="${distName}/${diskName}.DSK" filename="SOS.INTERP" type="SOS" address="0000"/>
 		<delete file="${builddir}/SPFSOS" />
 	</target>
 </project>
