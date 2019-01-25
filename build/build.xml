@@ -12,6 +12,7 @@
 	<property name="builddir" value="${basedir}/build" />
 	<property file="${builddir}/SPFBuild.properties"/>
 	<property file="${builddir}/SPFBuild-default.properties"/>
+	<property name="baseDisk" value="${builddir}/SPFBase.dsk" />
 	<property name="jarBundlerJar" value="${builddir}/lib/jarbundler-2.1.0/jarbundler-2.1.0.jar" />
 	<property name="rxtxVersion" value="rxtx-2.2pre2-local" />
 	<property name="rxtxZip" value="${rxtxVersion}.zip" />
@@ -40,7 +41,7 @@
 	</target>
 
 	<target name="setup">
-		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/${diskName}.DSK" />
+		<copy file="${baseDisk}" tofile="${builddir}/${distName}/${diskName}.DSK" />
 		<condition property="SOS-needed">
 			<not>
 				<isset property="skipSOS" />
@@ -67,23 +68,23 @@
 		<delete file="${builddir}/SPF" />
 		<delete file="${builddir}/SPF.SYSTEM" />
 		<delete file="${builddir}/SPFSOS" />
-		<delete file="${projdir}/client/src/messages.asm" />
+		<delete file="${projdir}f/src/messages.asm" />
 		<delete file="${builddir}/${distName}.tar.gz" />
 		<delete file="${builddir}/${distName}.zip" />
 		<delete file="${builddir}/${distName}.dmg" />
 		<delete file="${builddir}/${distName}/${diskName}.DSK" />
 		<delete>
-			<fileset dir="${projdir}/client/src" includes="**/*.o"/>
-			<fileset dir="${projdir}/client/src" includes="**/*.map"/>
-			<fileset dir="${projdir}/client/src" includes="**/*.lst"/>
-			<fileset dir="${projdir}/client/src" includes="**/*.lib"/>
+			<fileset dir="${projdir}/src" includes="**/*.o"/>
+			<fileset dir="${projdir}/src" includes="**/*.map"/>
+			<fileset dir="${projdir}/src" includes="**/*.lst"/>
+			<fileset dir="${projdir}/src" includes="**/*.lib"/>
 		</delete>
 	</target>
 
 	<target name="assemble">
 		<mkdir dir="${builddir}/${distName}"/>
-		<copy file="${projdir}/client/src/messagesOrig.asm" tofile="${projdir}/client/src/messages.asm" overwrite="true" />
-		<replace file="${projdir}/client/src/messages.asm" token="%SPF_VERSION%" value="${versionString}"/>
+		<copy file="${projdir}/src/messagesOrig.asm" tofile="${projdir}/src/messages.asm" overwrite="true" />
+		<replace file="${projdir}/src/messages.asm" token="%SPF_VERSION%" value="${versionString}"/>
 		<antcall target="assembleProDOS"/>
 		<antcall target="assembleSOS"/>
 	</target>
@@ -93,36 +94,36 @@
 		Assemble the SPF source
 		-->
 		<echo message="Assembling SPF source..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
-			<arg line="-t none -l prodos/prodosmain.asm" />
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -I . -l prodos/prodosmain.lst prodos/prodosmain.asm" />
 		</exec>
 		<echo message="Assembling SPF Launcher source..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
-			<arg line="-t none -l prodos/launch.asm" />
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -I . -l prodos/launch.lst prodos/launch.asm" />
 		</exec>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
-			<arg line="-t none -l prodos/startup.asm" />
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -I . -l prodos/startup.lst prodos/startup.asm" />
 		</exec>
 		<!--
 		Link the bits
 		-->
 		<echo message="Linking Startup/Launcher..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ld65">
 			<arg line="-o STARTUP.SYSTEM -C prodos/launch.cfg prodos/startup.o" />
 		</exec>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ld65">
 			<arg line="-o SPF -C prodos/launch.cfg prodos/launch.o" />
 		</exec>
 		<echo message="Linking SPF..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ld65">
 			<arg line="-o SPF.BIN -m SPFprodos.map -C prodos/SPF.cfg prodos/prodosmain.o tail.o" />
 		</exec>
 		<!--
 		Move the object code to the build directory
 		-->
-		<move file="${projdir}/client/src/STARTUP.SYSTEM" tofile="${builddir}/STARTUP.SYSTEM" />
-		<move file="${projdir}/client/src/SPF" tofile="${builddir}/SPF" />
-		<move file="${projdir}/client/src/SPF.BIN" tofile="${builddir}/SPF.BIN" />
+		<move file="${projdir}/src/STARTUP.SYSTEM" tofile="${builddir}/STARTUP.SYSTEM" />
+		<move file="${projdir}/src/SPF" tofile="${builddir}/SPF" />
+		<move file="${projdir}/src/SPF.BIN" tofile="${builddir}/SPF.BIN" />
 	</target>
 
 	<target name="assembleSOS" depends="assembleCommon" if="SOS-needed">
@@ -130,20 +131,20 @@
 		Assemble the SPFSOS source
 		-->
 		<echo message="Assembling SPFSOS source..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
-			<arg line="-t none -l sos/sosmain.asm" />
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ca65">
+			<arg line="-t none -I . -l sos/sosmain.lst sos/sosmain.asm" />
 		</exec>
 		<!--
 		Link the bits
 		-->
 		<echo message="Linking SPFSOS..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ld65">
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ld65">
 			<arg line="-o SPFSOS -m SPFSOS.map -C sos/SPF.cfg sos/sosmain.o tail.o" />
 		</exec>
 		<!--
 		Move the object code to the build directory
 		-->
-		<move file="${projdir}/client/src/SPFSOS" tofile="${builddir}/SPFSOS" />
+		<move file="${projdir}/src/SPFSOS" tofile="${builddir}/SPFSOS" />
 	</target>
 
 	<target name="assembleCommon">
@@ -151,7 +152,7 @@
 		Assemble the end of source marker
 		-->
 		<echo message="Assembling end-of-source marker..."/>
-		<exec dir="${projdir}/client/src" executable="${assemblerPath}/ca65">
+		<exec dir="${projdir}/src" executable="${assemblerPath}/ca65">
 			<arg line="-t none tail.asm" />
 		</exec>
 	</target>
@@ -163,7 +164,7 @@
 		<!--
 		Start disk images containing the release number
 		-->
-		<copy file="${builddir}/SPFBase.dsk" tofile="${builddir}/${distName}/${diskName}.DSK" />
+		<copy file="${baseDisk}" tofile="${builddir}/${distName}/${diskName}.DSK" />
 		<!--
 		Put the assembled programs on the disk images
 		-->
