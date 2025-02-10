@@ -158,6 +158,7 @@ CheckForROMX:
 	rts
 
 GetTimeROMX:
+	bit $C0E0	; Temporarily disable Zip Chip
 	bit $FACA
 	bit $FACA
 	bit $FAFE	; activate bank 0
