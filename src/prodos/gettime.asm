@@ -162,7 +162,7 @@ GetTimeROMX:
 	bit $FACA
 	bit $FACA
 	bit $FAFE	; activate bank 0
-	jsr $C806	; read clock
+	jsr $D8F0	; read clock through firmware entry point
 	bit $F851	; exit bank 0
 
 	lda $2B2	; Hours
