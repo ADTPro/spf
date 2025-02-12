@@ -15,6 +15,7 @@ An internal clock on the Apple side is required for this functionality to be ena
  1. IIgs built-in clock
  2. NoSlotClock
  3. Thunderclock
+ 4. ROMX family
 
 The reason why SPF can't/doesn't use the built-in ProDOS clock interface is it only gives information to the minute
 resolution - and we need seconds.  (More resolution would be nice, but seconds seems to be the best we can hope for in the universe of Apple II clocks.)

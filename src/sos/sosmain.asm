@@ -1,6 +1,6 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2011 - 2013 by David Schmidt
+; Copyright (C) 2011 - 2025 by David Schmidt
 ; david__schmidt at users.sourceforge.net
 ;
 ; This program is free software; you can redistribute it and/or modify it 
@@ -38,7 +38,7 @@
 	.include "sos/lowlevel.asm"
 	.include "timetest.asm"
 	.include "sos/gettime.asm"
-	.include "sos/fileops.asm"
+	.include "fileops.asm"
 
 ; Stubs from Disk II-related stuff that SOS does not need
 ReceiveNib:

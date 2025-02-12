@@ -1,7 +1,7 @@
 ;
 ; SPF - Stress ProDOS Filesystem
-; Copyright (C) 2013 by David Schmidt
-; david__schmidt at users.sourceforge.net
+; Copyright (C) 2013 - 2025 by David Schmidt
+; 1110325+david-schmidt@users.noreply.github.com
 ;
 ; This program is free software; you can redistribute it and/or modify it 
 ; under the terms of the GNU General Public License as published by the 
@@ -24,6 +24,8 @@ InitTime:
 	bcc FoundClockGS
 	jsr CheckForNoSlotClock
 	bcc FoundClockNoSlot
+	jsr CheckForROMX
+	bcc FoundClockROMX
 	jsr CheckForSlottedClocks
 	rts
 
@@ -44,6 +46,16 @@ FoundClockNoSlot:
 	lda #<GetTimeNSC
 	sta GetTime+1
 	lda #>GetTimeNSC
+	sta GetTime+2
+	rts
+
+FoundClockROMX:
+;---------------------------------------------------------
+; Patch the entry point of GetTime to the ROMX version
+;---------------------------------------------------------
+	lda #<GetTimeROMX
+	sta GetTime+1
+	lda #>GetTimeROMX
 	sta GetTime+2
 	rts
 
@@ -121,6 +133,46 @@ GetTimeNSC:
 	lda L0309	; Seconds
 	sta TimeNow+2
 	lda L030A	; Hundredths
+	sta TimeNow+3
+	rts
+
+CheckForROMX:
+	; Return with carry clear means we found one
+	bit $C0E0	; Temporarily disable Zip Chip
+	bit $FACA	; Select ROMX Bank 0
+	bit $FACA
+	bit $FAFE
+	lda $DFFE	; Will return $4A if ROMX present
+	cmp #$4A	;  or $AA if ROMX in Recovery mode
+	bne NoROMX
+	lda $DFFF	; Will return $CD if ROMX present
+	cmp #$CD	;  or $55 if ROMX in Recovery mode
+	bne NoROMX
+	; Here we know we have a ROMX
+	clc
+	jmp DoneROMX
+	NoROMX:
+	sec
+	DoneROMX:
+	bit $F851	; Return to Main Bank (MUST DO, EVEN IF ROMX NOT FOUND!)
+	rts
+
+GetTimeROMX:
+	bit $C0E0	; Temporarily disable Zip Chip
+	bit $FACA
+	bit $FACA
+	bit $FAFE	; activate bank 0
+	jsr $D8F0	; read clock through firmware entry point
+	bit $F851	; exit bank 0
+
+	lda $2B2	; Hours
+	sta TimeNow
+	lda $2B1	; Minutes
+	sta TimeNow+1
+	lda $2B0	; Seconds + $80 ST Oscillator enabled bit
+	and #$7f	; Seconds
+	sta TimeNow+2
+	lda #$00	; Hundredths (not available on ROMX)
 	sta TimeNow+3
 	rts
 
