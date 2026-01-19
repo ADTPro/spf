@@ -378,10 +378,8 @@ ReadBlockPhaseBegin:
 	lda NUMBLKS+1
 	sta <dividend+1
 	; Need to divide the dividend by 2... since we currently hold blocks, which are 512 bytes and not 1K.
-	lda <dividend+1	; Load the MSB
-        asl a		; Copy the sign bit into C
-        ror <dividend+1	; And back into the MSB
-        ror <dividend	; Rotate the LSB as normal
+	lsr <dividend+1	; Divide the MSB as unsigned
+	ror <dividend	; Rotate the LSB as normal
 	ldx #$1f
 	ldy #$06
 	jsr GOTOXY
