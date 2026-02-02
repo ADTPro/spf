@@ -131,6 +131,9 @@ BlockRead1:
 	CALLOS OS_READBLOCK, READ_BLK	; Read one block
 	CALLOS_CHECK_POS	; Branch forward on success
 	jmp BlockFail
+:	inc READ_BLK_NUM
+	bne :+
+	inc READ_BLK_NUM+1
 :	lda $C000		; Let the user interrupt
 	cmp #CHR_ESC		; Escape = abort
 	beq FileFail1
